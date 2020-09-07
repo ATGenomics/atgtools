@@ -55,7 +55,7 @@ def modify_feature_names(fn):
     ret = fn
     ascii = [[' ', '$', '@', '#', '%', '^', '&', '*', "'"],
              ['/', '(', ')', '-', '+', '=', '{', '}', '[', ']',
-             ',', '.', ';', ':', '?', '<', '>', '.', ',']]
+              ',', '.', ';', ':', '?', '<', '>', '.', ',']]
 
     for p in ascii[0]:
         ret = [re.sub(re.escape(p), "", f) for f in ret]
@@ -78,6 +78,7 @@ def modify_feature_names(fn):
 def cmp_to_key(mycmp):
     class K(object):
         """Convert a cmp= function into a key= function"""
+
         def __init__(self, obj, *args):
             self.obj = obj
 
@@ -98,6 +99,7 @@ def cmp_to_key(mycmp):
 
         def __ne__(self, other):
             return mycmp(self.obj, other.obj) != 0
+
     return K
 
 
@@ -127,7 +129,7 @@ def sort_by_cl(datals, n, c, s, u):
 
     if n == 3:
         datals.sort(key=cmp_to_key(sort_lines3))
-    
+
     if n == 2:
         if s is None:
             datals.sort(key=cmp_to_key(sort_lines2u))
@@ -358,3 +360,4 @@ if __name__ == '__main__':
     else:
         with open(params['output_file'], 'wb') as back_file:
             pickle.dump(out, back_file)
+
