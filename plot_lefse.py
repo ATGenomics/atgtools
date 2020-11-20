@@ -150,8 +150,8 @@ def plot_histo_hor(path, paramshor, datahor, bcl, report_features):
         else:
             rr = ".".join(r[0].split(".")[-paramshor['n_scl']:])
         if len(rr) > paramshor['max_feature_len']:
-            rr = rr[:paramshor['max_feature_len'] / 2 - 2] + " [..]" + \
-                 rr[-paramshor['max_feature_len'] / 2 + 2:]
+            rr = rr[:paramshor['max_feature_len'] / 2 - 2] \
+                 + " [..]" + rr[-paramshor['max_feature_len'] / 2 + 2:]
         if m * (indcl * 2 - 1) < 0 and bcl:
             ax.text(mv / 40.0,
                     float(i) - 0.3, rr, l_align,
