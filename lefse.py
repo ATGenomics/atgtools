@@ -42,7 +42,7 @@ def read_params():
     parser.add_argument('-s', dest="strict", choices=[0, 1, 2], type=int, default=0,
                         help="set the multiple testing correction options. 0 no correction (more strict, "
                              "default), 1 correction for independent comparisons, 2 correction for "
-                             "independent comparison")
+                             "dependent comparison")
     parser.add_argument('--min_c', dest="min_c", metavar='int', type=int, default=10,
                         help="minimum number of samples per subclass for performing wilcoxon test (default 10)")
     parser.add_argument('-t', dest="title", metavar='str', type=str, default="",
@@ -100,7 +100,7 @@ def test_kw_r(clskw, featskw, p, factors):
         vec = robjects.FactorVector(robjects.StrVector(clskw[f]))
         robjects.globalenv['x' + str(i + 1)] = vec
     fo = "y~x1"
-    kw_res = robjects.r('kruskal.test('+fo+',)$p.value')
+    kw_res = robjects.r('kruskal.test(' + fo + ',)$p.value')
     return tuple(kw_res)[0] < p, tuple(kw_res)[0]
 
 
@@ -137,7 +137,7 @@ def test_rep_wilcoxon_r(sl, cl_hie, featsw, th, multiclass_strat,
                 if cl1[0] == cl2[0] and len(set(cl1)) == 1 and len(set(cl2)) == 1:
                     tresw, first = False, False
                 elif not med_comp:
-                    robjects.globalenv["x"] = robjects.FloatVector(cl1+cl2)
+                    robjects.globalenv["x"] = robjects.FloatVector(cl1 + cl2)
                     cl_li = ["a" for a in cl1] + ["b" for b in cl2]
                     vec_cl = robjects.FactorVector(robjects.StrVector(cl_li))
                     robjects.globalenv["y"] = vec_cl
@@ -190,7 +190,7 @@ def test_rep_wilcoxon_r(sl, cl_hie, featsw, th, multiclass_strat,
             for a in all_diff:
                 if k in a:
                     nk += 1
-            if nk == tot_k-1:
+            if nk == tot_k - 1:
                 return True
         return False
     return True
@@ -231,13 +231,13 @@ def test_lda_r(clslda, featslda, cl_sl, boots,
         ff = [(featslda['class'][i], v) for i, v in enumerate(featslda[k])]
 
         for c in clss:
-            max_class = max(float(featslda['class'].count(c))*0.5, 4)
+            max_class = max(float(featslda['class'].count(c)) * 0.5, 4)
             if len(set([float(v[1]) for v in ff if v[0] == c])) > max_class:
                 continue
 
             for i, v in enumerate(featslda[k]):
                 if featslda['class'][i] == c:
-                    nor_var = random.normalvariate(0.0, max(featslda[k][i]*0.05, 0.01))
+                    nor_var = random.normalvariate(0.0, max(featslda[k][i] * 0.05, 0.01))
                     featslda[k][i] = math.fabs(featslda[k][i] + nor_var)
 
     rdict = {}
@@ -249,8 +249,8 @@ def test_lda_r(clslda, featslda, cl_sl, boots,
 
     robjects.globalenv["d"] = robjects.DataFrame(rdict)
     lfk = len(featslda[fk[0]])
-    rfk = int(float(len(featslda[fk[0]]))*fract_sample)
-    f = "class ~ "+fk[0]
+    rfk = int(float(len(featslda[fk[0]])) * fract_sample)
+    f = "class ~ " + fk[0]
 
     for k in fk[1:]:
         f += " + " + k.strip()
@@ -275,14 +275,14 @@ def test_lda_r(clslda, featslda, cl_sl, boots,
             if not contast_classes(featslda, rand_s, min_cl, ncl):
                 break
 
-        rand_s = [r+1 for r in rand_s]
+        rand_s = [r + 1 for r in rand_s]
         means[k][i] = []
 
         for p in pairs:
             robjects.globalenv["rand_s"] = robjects.IntVector(rand_s)
             robjects.globalenv["sub_d"] = robjects.r('d[rand_s,]')
-            z = robjects.r('z <- suppressWarnings(lda(as.formula(' +
-                           f + '), data=sub_d, tol=' + str(tol_min)+'))')
+            z = robjects.r('z <- suppressWarnings(lda(as.formula('
+                            + f + '),data=sub_d, tol=' + str(tol_min) + '))')
             robjects.r('w <- z$scaling[,1]')
             robjects.r('w.unit <- w/sqrt(sum(w^2))')
             robjects.r('ss <- sub_d[,-match("class", colnames(sub_d))]')
@@ -295,8 +295,8 @@ def test_lda_r(clslda, featslda, cl_sl, boots,
 
             robjects.r('xy.matrix <- as.matrix(ss)')
             robjects.r('LD <- xy.matrix%*%w.unit')
-            robjects.r('effect.size <- abs(mean(LD[sub_d[,"class"]=="' +
-                       p[0] + '"]) - mean(LD[sub_d[,"class"]=="' + p[1]+'"]))')
+            robjects.r('effect.size <- abs(mean(LD[sub_d[,"class"]=="'
+                       + p[0] + '"]) - mean(LD[sub_d[,"class"]=="' + p[1] + '"]))')
             scal = robjects.r('wfinal <- w.unit * effect.size')
             rres = robjects.r('mm <- z$means')
             rowns = list(rres.rownames)
@@ -309,7 +309,7 @@ def test_lda_r(clslda, featslda, cl_sl, boots,
                     coeff.append(0.0)
             res_list = []
             for pp in [p[0], p[1]]:
-                pp_v = (pp, [float(ff) for ff in rres.rx(pp, True)] if pp in rowns else [0.0]*lenc)
+                pp_v = (pp, [float(ff) for ff in rres.rx(pp, True)] if pp in rowns else [0.0] * lenc)
                 res_list.append(pp_v)
             res = dict(res_list)
 
