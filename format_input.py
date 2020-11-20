@@ -360,4 +360,3 @@ if __name__ == '__main__':
     else:
         with open(params['output_file'], 'wb') as back_file:
             pickle.dump(out, back_file)
-
