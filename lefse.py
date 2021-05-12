@@ -341,7 +341,7 @@ def save_res(res, filename):
                 out.write("\t")
             wc_res = "wilcox_res"
             res_wc = res[wc_res]
-            out.write("\t{(res_wc[k] if wc_res in res and k in res_wc else '-')}\n")
+            out.write(f"\t{(res_wc[k] if wc_res in res and k in res_wc else '-')}\n")
 
 
 if __name__ == '__main__':
