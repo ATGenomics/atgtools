@@ -9,41 +9,90 @@ import pickle
 
 
 def read_params():
-    parser = argparse.ArgumentParser(description='LEfSe formatting modules')
-    parser.add_argument('input_file', metavar='INPUT_FILE', type=str,
-                        help='the input file, feature hierarchical level can be specified '
-                             'with | or . and those symbols must not be present for other '
-                             'reasons in the input file.')
-    parser.add_argument('output_file', metavar='OUTPUT_FILE', type=str,
-                        help='the output file containing the data for LEfSe')
-    parser.add_argument('-j', dest='json_format', required=False, action='store_true',
-                        help='the formatted table in json format')
-    parser.add_argument('-f', dest='feats_dir', choices=['c', 'r'], type=str, default='r',
-                        help='set whether the features are on rows (default) or on columns')
-    parser.add_argument('-c', dest='class', metavar='[1..n_feats]', type=int, default=1,
-                        help='set which feature use as class (default 1)')
-    parser.add_argument('-s', dest='subclass', metavar='[1..n_feats]', type=int, default=None,
-                        help='set which feature use as subclass (default -1 meaning no subclass)')
-    parser.add_argument('-u', dest='subject', metavar='[1..n_feats]', type=int, default=None,
-                        help='set which feature use as subject (default -1 meaning no subject)')
-    parser.add_argument('-o', dest='norm_v', metavar='float', type=float, default=-1.0,
-                        help='set the normalization value (default -1.0 meaning no normalization)')
-    parser.add_argument('-m', dest='missing_p', choices=['f', 's'], type=str, default='d',
-                        help='set the policy to adopt with missing values: f removes the features '
-                             'with missing values, s removes samples with missing values (default f)')
+    parser = argparse.ArgumentParser(description="LEfSe formatting modules")
+    parser.add_argument(
+        "input_file",
+        metavar="INPUT_FILE",
+        type=str,
+        help="the input file, feature hierarchical level can be specified "
+        "with | or . and those symbols must not be present for other "
+        "reasons in the input file.",
+    )
+    parser.add_argument(
+        "output_file",
+        metavar="OUTPUT_FILE",
+        type=str,
+        help="the output file containing the data for LEfSe",
+    )
+    parser.add_argument(
+        "-j",
+        dest="json_format",
+        required=False,
+        action="store_true",
+        help="the formatted table in json format",
+    )
+    parser.add_argument(
+        "-f",
+        dest="feats_dir",
+        choices=["c", "r"],
+        type=str,
+        default="r",
+        help="set whether the features are on rows (default) or on columns",
+    )
+    parser.add_argument(
+        "-c",
+        dest="class",
+        metavar="[1..n_feats]",
+        type=int,
+        default=1,
+        help="set which feature use as class (default 1)",
+    )
+    parser.add_argument(
+        "-s",
+        dest="subclass",
+        metavar="[1..n_feats]",
+        type=int,
+        default=None,
+        help="set which feature use as subclass (default -1 meaning no subclass)",
+    )
+    parser.add_argument(
+        "-u",
+        dest="subject",
+        metavar="[1..n_feats]",
+        type=int,
+        default=None,
+        help="set which feature use as subject (default -1 meaning no subject)",
+    )
+    parser.add_argument(
+        "-o",
+        dest="norm_v",
+        metavar="float",
+        type=float,
+        default=-1.0,
+        help="set the normalization value (default -1.0 meaning no normalization)",
+    )
+    parser.add_argument(
+        "-m",
+        dest="missing_p",
+        choices=["f", "s"],
+        type=str,
+        default="d",
+        help="set the policy to adopt with missing values: f removes the features "
+        "with missing values, s removes samples with missing values (default f)",
+    )
     args = parser.parse_args()
     return vars(args)
 
 
 def read_input_file(inp_file):
-    common = {'ReturnedData': []}
+    common = {"ReturnedData": []}
 
     with open(inp_file) as inp:
         for line in inp.readlines():
             li = []
-            for r in line.strip().split('\t'):
+            for r in line.strip().split("\t"):
                 li.append(r.strip())
-            common['ReturnedData'].append(li)
+            common["ReturnedData"].append(li)
     return common
 
 
@@ -53,22 +102,43 @@ def transpose(table):
 
 def modify_feature_names(fn):
     ret = fn
-    ascii = [[' ', '$', '@', '#', '%', '^', '&', '*', "'"],
-             ['/', '(', ')', '-', '+', '=', '{', '}', '[', ']',
-              ',', '.', ';', ':', '?', '<', '>', '.', ',']]
+    ascii = [
+        [" ", "$", "@", "#", "%", "^", "&", "*", "'"],
+        [
+            "/",
+            "(",
+            ")",
+            "-",
+            "+",
+            "=",
+            "{",
+            "}",
+            "[",
+            "]",
+            ",",
+            ".",
+            ";",
+            ":",
+            "?",
+            "<",
+            ">",
+            ".",
+            ",",
+        ],
+    ]
 
     for p in ascii[0]:
         ret = [re.sub(re.escape(p), "", f) for f in ret]
 
     for g in ascii[1]:
-        ret = [re.sub(re.escape(g), '_', f) for f in ret]
+        ret = [re.sub(re.escape(g), "_", f) for f in ret]
 
-    ret = [re.sub(r'\|', '.', f) for f in ret]
+    ret = [re.sub(r"\|", ".", f) for f in ret]
 
     ret2 = []
     for r in ret:
-        if r[0] in [str(x) for x in range(10)] + list('_'):
-            ret2.append('f_' + r)
+        if r[0] in [str(x) for x in range(10)] + list("_"):
+            ret2.append("f_" + r)
         else:
             ret2.append(r)
 
@@ -154,7 +224,7 @@ def rename_same_subcl(cla, subcl):
     new_subcl = []
     for i, sc in enumerate(subcl):
         if sc in toc:
-            new_subcl.append(cla[i] + '_' + sc)
+            new_subcl.append(cla[i] + "_" + sc)
         else:
             new_subcl.append(sc)
     return new_subcl
@@ -187,16 +257,16 @@ def get_class_slices(datasl):
 
 
 def add_missing_levels(ff):
-    if sum([f.count('.') for f in ff]) < 1:
+    if sum([f.count(".") for f in ff]) < 1:
         return ff
 
     clades2leaves = {}
     for f in ff:
-        fs = f.split('.')
+        fs = f.split(".")
         if len(fs) < 2:
             continue
         for g in range(len(fs)):
-            n = '.'.join(fs[:g])
+            n = ".".join(fs[:g])
             if n in clades2leaves:
                 clades2leaves[n].append(f)
             else:
@@ -217,7 +287,7 @@ def numerical_values(feat, nnorm):
 
     mul = []
     fk = list(feat.keys())
-    if len(fk) < sum([k.count('.') for k in fk]):
+    if len(fk) < sum([k.count(".") for k in fk]):
         hie = True
     else:
         hie = False
@@ -256,7 +326,7 @@ def numerical_values(feat, nnorm):
     return feat
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     params = read_params()
     # print(params)
     common_area = read_input_file(sys.argv[1])
@@ -264,10 +334,10 @@ if __name__ == '__main__':
     # print(list(common_area.items())[0][1][-1])
     # print(list(common_area.items())[0][1][-1][0:2])
 
-    data = common_area['ReturnedData']
+    data = common_area["ReturnedData"]
     # print(data)
 
-    if params['feats_dir'] == 'c':
+    if params["feats_dir"] == "c":
         data = transpose(data)
         # print(data)
 
@@ -277,34 +347,36 @@ if __name__ == '__main__':
     # print(first_line[4:])
 
     ncl = 1
-    class_1 = params['class'] - 1
-    if params['subclass'] is not None:
+    class_1 = params["class"] - 1
+    if params["subclass"] is not None:
         ncl += 1
-        subclass_1 = params['subclass'] - 1
+        subclass_1 = params["subclass"] - 1
     else:
         subclass_1 = None
-    if params['subject'] is not None:
+    if params["subject"] is not None:
         ncl += 1
-        subject_1 = params['subject'] - 1
+        subject_1 = params["subject"] - 1
     else:
         subject_1 = None
 
     # subclass_1 = params['subclass'] - 1 if params['subclass'] is not None else None
     # subject_1 = params['subject'] - 1 if params['subject'] is not None else None
 
-    data = list(zip(first_line,
-                    *sort_by_cl(
-                        list(zip(*data))[1:], ncl,
-                        class_1, subclass_1, subject_1)))
+    data = list(
+        zip(
+            first_line,
+            *sort_by_cl(list(zip(*data))[1:], ncl, class_1, subclass_1, subject_1)
+        )
+    )
 
     # for x in [x[0:] for x in data[0:4]]:
     #    print('\t'.join([str(i) for i in x]))
 
-    cls_i = [('class', params['class'] - 1)]
-    if params['subclass'] is not None:
-        cls_i.append(('subclass', params['subclass'] - 1))
-    if params['subject'] is not None:
-        cls_i.append(('subject', params['subject'] - 1))
+    cls_i = [("class", params["class"] - 1)]
+    if params["subclass"] is not None:
+        cls_i.append(("subclass", params["subclass"] - 1))
+    if params["subject"] is not None:
+        cls_i.append(("subject", params["subject"] - 1))
 
     # cls_i.sort(lambda x, y: -cmp(x[1], y[1]))
     # print(cls_i)
@@ -322,41 +394,43 @@ if __name__ == '__main__':
     # python 2 code: if not params['subclass'] > 0
     # print(cls.items())
     # print(params.items())
-    if params['subclass'] is None:
-        cls['subclass'] = []
-        for cl in cls['class']:
-            cls['subclass'].append(str(cl) + "_subcl")
+    if params["subclass"] is None:
+        cls["subclass"] = []
+        for cl in cls["class"]:
+            cls["subclass"].append(str(cl) + "_subcl")
     # print(cls.items())
     # print(cls)
 
-    cls['subclass'] = rename_same_subcl(cls['class'], cls['subclass'])
+    cls["subclass"] = rename_same_subcl(cls["class"], cls["subclass"])
 
     class_sl, subclass_sl, class_hierarchy = get_class_slices(list(zip(*cls.values())))
     # print(data)
 
-    if params['subject'] is not None:
+    if params["subject"] is not None:
         feats = dict([(d[0], d[1:]) for d in data[3:]])
-    elif params['subclass'] is not None:
+    elif params["subclass"] is not None:
         feats = dict([(d[0], d[1:]) for d in data[2:]])
     else:
         feats = dict([(d[0], d[1:]) for d in data[1:]])
 
     feats = add_missing_levels(feats)
-    norm = params['norm_v']
+    norm = params["norm_v"]
     feats = numerical_values(feats, norm)
 
-    out = {'feats': feats,
-           'norm': norm,
-           'cls': cls,
-           'class_sl': class_sl,
-           'subclass_sl': subclass_sl,
-           'class_hierarchy': class_hierarchy
-           }
+    out = {
+        "feats": feats,
+        "norm": norm,
+        "cls": cls,
+        "class_sl": class_sl,
+        "subclass_sl": subclass_sl,
+        "class_hierarchy": class_hierarchy,
+    }
 
-    if params['json_format']:
-        with open(params['output_file'], 'w') as back_file:
-            back_file.write(json.dumps(out, sort_keys=True,
-                                       indent=4, ensure_ascii=False))
+    if params["json_format"]:
+        with open(params["output_file"], "w") as back_file:
+            back_file.write(
+                json.dumps(out, sort_keys=True, indent=4, ensure_ascii=False)
+            )
     else:
-        with open(params['output_file'], 'wb') as back_file:
+        with open(params["output_file"], "wb") as back_file:
             pickle.dump(out, back_file)
