@@ -196,7 +196,7 @@ def get_class_means(cl_sl, feat):
     for fk, f in list(feat.items()):
         means[fk] = []
         for k in clk:
-            means[fk].append(np.mean(f[cl_sl[k][0] : cl_sl[k][1]]))
+            means[fk].append(np.mean(f[cl_sl[k][0]: cl_sl[k][1]]))
     return clk, means
 
 
@@ -243,11 +243,11 @@ def test_rep_wilcoxon_r(
             br = False
             for j, k2 in enumerate(cl_hie[pair[1]]):
                 if not comp_all_sub:
-                    if k1[len(pair[0]) :] != k2[len(pair[1]) :]:
+                    if k1[len(pair[0]):] != k2[len(pair[1]):]:
                         ok += 1
                         continue
-                cl1 = featsw[sl[k1][0] : sl[k1][1]]
-                cl2 = featsw[sl[k2][0] : sl[k2][1]]
+                cl1 = featsw[sl[k1][0]: sl[k1][1]]
+                cl2 = featsw[sl[k2][0]: sl[k2][1]]
                 med_comp = False
                 if len(cl1) < min_c or len(cl2) < min_c:
                     med_comp = True
@@ -403,11 +403,7 @@ def test_lda_r(clslda, featslda, cl_sl, boots, fract_sample, lda_th, tol_min, nl
             robjects.globalenv["rand_s"] = robjects.IntVector(rand_s)
             robjects.globalenv["sub_d"] = robjects.r("d[rand_s,]")
             z = robjects.r(
-                "z <- suppressWarnings(lda(as.formula("
-                + f
-                + "),data=sub_d, tol="
-                + str(tol_min)
-                + "))"
+                "z <- suppressWarnings(lda(as.formula(" + f + "),data=sub_d, tol=" + str(tol_min) + "))"
             )
             robjects.r("w <- z$scaling[,1]")
             robjects.r("w.unit <- w/sqrt(sum(w^2))")
@@ -422,11 +418,7 @@ def test_lda_r(clslda, featslda, cl_sl, boots, fract_sample, lda_th, tol_min, nl
             robjects.r("xy.matrix <- as.matrix(ss)")
             robjects.r("LD <- xy.matrix%*%w.unit")
             robjects.r(
-                'effect.size <- abs(mean(LD[sub_d[,"class"]=="'
-                + p[0]
-                + '"]) - mean(LD[sub_d[,"class"]=="'
-                + p[1]
-                + '"]))'
+                'effect.size <- abs(mean(LD[sub_d[,"class"]=="' + p[0] + '"]) - mean(LD[sub_d[,"class"]=="' + p[1] + '"]))'
             )
             scal = robjects.r("wfinal <- w.unit * effect.size")
             rres = robjects.r("mm <- z$means")
