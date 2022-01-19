@@ -174,7 +174,7 @@ def plot_histo_hor(path, paramshor, datahor, bcl, report_features):
         bottom=tail * (1.0 - ints / (ints + ht)),
     )
 
-    fig.canvas.set_window_title("LDA results")
+    fig.canvas.manager.set_window_title("LDA results")
 
     l_align = {"horizontalalignment": "left", "verticalalignment": "baseline"}
     r_align = {"horizontalalignment": "right", "verticalalignment": "baseline"}
