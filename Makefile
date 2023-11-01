@@ -18,5 +18,19 @@ test_atg: all
 install: all
 	$(PYTHON) setup.py install && \
 	mkdir -p $(PREFIX)/etc/conda/activate.d && \
-	cp bin/activate_q2cli_tab_completion.sh $(PREFIX)/etc/conda/activate.d/
+	cp bin/activate_atg_tab_completion.sh $(PREFIX)/etc/conda/activate.d/
 
+.PHONY: docs
+docs:
+	# Generate docs - typer-cli must be referenced to the venv installation
+	typer atg utils docs --name atgtools --output docs/USAGE.md
+
+.PHONY: build
+build:
+	# Build the project
+	poetry build
+
+.PHONY: publish
+publish:
+	# Publish to PyPi
+	poetry publish --build

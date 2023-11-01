@@ -1,21 +1,22 @@
 [tool.poetry]
 name = "atgtools"
-version = "0.1.2"
+version = "0.1.6"
 description = ""
-authors = ["@zorbax"]
+authors = ["Otoniel Maya <otto94@gmail.com>"]
+license = "MIT"
+packages = [{include = "atg", from = "."}]
 
 [tool.poetry.dependencies]
 python = "^3.9"
-click = "^8.1.2"
-pandas = "^1.4.1"
-rich = "^12.4.4"
-
-[tool.poetry.dev-dependencies]
-pytest = "^5.2"
+typer = "^0.9.0"
+rich = "^13.3.5"
+pandas = "^2.0.2"
+icecream = "^2.1.3"
+toml = "^0.10.2"
 
 [tool.poetry.scripts]
-atg = 'atgtools.atg:main'
+atg = 'atg:atg'
 
 [build-system]
-requires = ["poetry-core>=1.0.0"]
+requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"

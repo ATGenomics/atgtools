@@ -3,6 +3,7 @@
 *.fastq
 *.fastq.gz
 dist/
+test/
 .DS_Store
 .venv
 .pytest_cache/
