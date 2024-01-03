@@ -1,0 +1,57 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  ci:
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.9", "3.10", "3.11", "3.12"]
+        poetry-version: ["1.6.1", "1.7.0", "1.7.1"]
+        os: [ubuntu-22.04] # macos-latest, windows-latest
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v3
+      - name: Install Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install Poetry
+        uses: abatilo/actions-poetry@v2
+        with:
+          poetry-version: ${{ matrix.poetry-version }}
+      - uses: actions/cache@v3
+        name: Define a cache for the venv
+        with:
+          path: ./.venv
+          key: venv-${{ hashFiles('poetry.lock') }}
+      - name: Install library and dependencies
+        run: |
+            poetry run pip install --upgrade pip setuptools
+            poetry install
+            # poetry install --with tests
+            # - name: Run Tox (Pytest + Coverage)
+            #   run: |
+            #       poetry run tox
+            #   env:
+            #       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+            #       PLATFORM: ${{ matrix.os }}
+    
+            # - name: Upload Results to CodeCov
+            #   if: success()
+            #   uses: codecov/codecov-action@v3
+            #   with:
+            #       env_vars: PYTHON_VERSION
+            #       fail_ci_if_error: false
+            #       files: ./tests/reports/coverage-html/index.html,./tests/reports/coverage.xml
+            #       flags: unittests
+            #       name: "${{ matrix.os }} - Python ${{ matrix.python-version }}"
+            #       token: ${{ secrets.CODECOV_TOKEN }}
+    

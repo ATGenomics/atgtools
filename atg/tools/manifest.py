@@ -1,9 +1,8 @@
 from pathlib import Path
-from typing import Dict, Any
+from typing import Dict
 import sys
 
 from atg.utils import timeit
-from icecream import ic
 
 
 @timeit
@@ -20,7 +19,6 @@ def create_manifest(fastq_dir: str, output_file: str, csv_format: bool) -> None:
     output = Path.cwd() / output_file
     fq_files = [str(x.name) for x in _fastq_dir.glob("*fastq.gz")]
     prefix = sorted({"_".join(i.split("_")[:-1]) for i in fq_files})
-    ic(prefix)
 
     def table_format(manifest: dict, file: Path, comma: bool = False) -> None:
         if comma:
@@ -52,5 +50,3 @@ def create_manifest(fastq_dir: str, output_file: str, csv_format: bool) -> None:
                     f.write(f"{k}{sep}{v}" + "\n")
 
     table_format(output_manifest, output, csv_format)
-
-
