@@ -1,9 +1,8 @@
-from pathlib import Path
-from typing import Dict, Any
 import sys
+from pathlib import Path
+from typing import Dict
 
-from atg.utils import timeit
-from icecream import ic
+from atg.utils import check_dir, timeit
 
 
 @timeit
@@ -11,16 +10,13 @@ def create_manifest(fastq_dir: str, output_file: str, csv_format: bool) -> None:
     """
     Create a manifest file (tsv/csv) from a directory containing FASTQ files.
     """
-    _fastq_dir = Path(fastq_dir).resolve()
-    if not any(Path(_fastq_dir).iterdir()):
-        print(f"{_fastq_dir.stem}/ is empty")
-        sys.exit(1)
+
+    _fastq_dir = check_dir(fastq_dir)
 
     output_manifest: Dict[str, str] = {}
     output = Path.cwd() / output_file
     fq_files = [str(x.name) for x in _fastq_dir.glob("*fastq.gz")]
     prefix = sorted({"_".join(i.split("_")[:-1]) for i in fq_files})
-    ic(prefix)
 
     def table_format(manifest: dict, file: Path, comma: bool = False) -> None:
         if comma:
@@ -52,5 +48,3 @@ def create_manifest(fastq_dir: str, output_file: str, csv_format: bool) -> None:
                     f.write(f"{k}{sep}{v}" + "\n")
 
     table_format(output_manifest, output, csv_format)
-
-

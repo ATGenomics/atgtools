@@ -1,9 +1,10 @@
 *.txt
 *.csv
+*.tsv
 *.fastq
 *.fastq.gz
 dist/
-test/
+tests/
 .DS_Store
 .venv
 .pytest_cache/

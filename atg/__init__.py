@@ -1,1 +1,1 @@
-from .commands.app import main_app as atg
+from .app import main_app as atg

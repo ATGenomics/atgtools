@@ -27,13 +27,13 @@ def download_url(input_file: Tuple[str, str, Path]) -> None:
 
 def fix_urls(urls: list) -> Dict[str, str]:
     urls_dict = {}
+    urls = [x for x in urls if isinstance(x, str)]
     for url in urls:
         filename = url.split("/")[-1]
         if "://" in url:
             pass
         else:
-            url = f"https://{url}"
-        urls_dict[filename] = url
+            urls_dict[filename] = f"https://{url}"
 
     return urls_dict
 
@@ -51,7 +51,7 @@ def request_3_times():
     return session
 
 
-def request_get(api: str, pdict: str, fields: str, safe: str = ",") -> str:
+def request_get(api: str, pdict: str, fields: str, safe: str = ",") -> pd.DataFrame:
     url_api = f"https://www.ebi.ac.uk/ena/{api}"
 
     pdict["fields"] = fields
@@ -69,12 +69,10 @@ def request_get(api: str, pdict: str, fields: str, safe: str = ",") -> str:
         return df
     except requests.exceptions.Timeout:
         print("Connection to the server has timed out. Please retry.")
+        return None
     except requests.exceptions.HTTPError:
-        print(
-            "HTTPError: This is likely caused by an invalid search query: "
-            f"\nURL queried: {r.url} \nUser query: {pdict}"
-        )
-        return
+        print("HTTPError: This is likely caused by an invalid search query")
+        return None
 
 
 def ena_fields(id_err: str, save: bool = True, fields: str = "") -> Dict[str, str]:
@@ -94,7 +92,6 @@ def ena_fields(id_err: str, save: bool = True, fields: str = "") -> Dict[str, st
     }
 
     df = request_get("portal/api/filereport", pdict=params, fields=fields)
-
     if save:
         df.to_csv(f"{id_err}.tsv", sep="\t", index=False)
         print(f"ENA metadata saved as {id_err}.tsv")
@@ -106,7 +103,6 @@ def ena_fields(id_err: str, save: bool = True, fields: str = "") -> Dict[str, st
 
 def ena_urls(df: pd.DataFrame) -> Dict[str, str]:
     urls = df["fastq_ftp"].str.split(";").explode().tolist()
-
     return fix_urls(urls)
 
 
