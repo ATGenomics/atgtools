@@ -1,4 +1,4 @@
-name: CI
+name: Installation
 
 on:
   push:
@@ -31,12 +31,11 @@ jobs:
         name: Define a cache for the venv
         with:
           path: ./.venv
-          key: venv-${{ hashFiles('poetry.lock') }}
+          key: venv-${{ runner.os }}-${{ hashFiles('poetry.lock') }}
       - name: Install library and dependencies
         run: |
-            poetry run pip install --upgrade pip setuptools
             poetry install
-            # poetry install --with tests
+
             # - name: Run Tox (Pytest + Coverage)
             #   run: |
             #       poetry run tox

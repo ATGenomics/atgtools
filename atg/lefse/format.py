@@ -5,9 +5,9 @@ from functools import cmp_to_key
 
 import numpy as np
 import typer
-from atg.utils import FeaturesDir
-from icecream import ic
 from loguru import logger
+
+from atg.utils import FeaturesDir
 
 app = typer.Typer()
 

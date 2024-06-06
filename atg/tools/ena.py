@@ -6,13 +6,13 @@ from typing import Dict, List, Tuple
 
 import pandas as pd
 import requests
-from icecream import ic
+
 from tabulate import tabulate
 from tqdm import tqdm
 from tqdm.contrib.concurrent import thread_map
 from urllib3 import util
 
-ic.configureOutput(prefix=" -> ")
+# ic.configureOutput(prefix=" -> ")
 
 
 def download_url(input_file: Tuple[str, str, Path]) -> None:
@@ -27,13 +27,15 @@ def download_url(input_file: Tuple[str, str, Path]) -> None:
 
 def fix_urls(urls: list) -> Dict[str, str]:
     urls_dict = {}
+    urls = [x for x in urls if isinstance(x, str)]
+
     for url in urls:
         filename = url.split("/")[-1]
         if "://" in url:
             pass
         else:
-            url = f"https://{url}"
-        urls_dict[filename] = url
+            urls_dict[filename] = f"https://{url}"
+
 
     return urls_dict
 
@@ -51,7 +53,7 @@ def request_3_times():
     return session
 
 
-def request_get(api: str, pdict: str, fields: str, safe: str = ",") -> str:
+def request_get(api: str, pdict: str, fields: str, safe: str = ",") -> pd.DataFrame:
     url_api = f"https://www.ebi.ac.uk/ena/{api}"
 
     pdict["fields"] = fields
@@ -69,12 +71,10 @@ def request_get(api: str, pdict: str, fields: str, safe: str = ",") -> str:
         return df
     except requests.exceptions.Timeout:
         print("Connection to the server has timed out. Please retry.")
+        return None
     except requests.exceptions.HTTPError:
-        print(
-            "HTTPError: This is likely caused by an invalid search query: "
-            f"\nURL queried: {r.url} \nUser query: {pdict}"
-        )
-        return
+        print("HTTPError: This is likely caused by an invalid search query")
+        return None
 
 
 def ena_fields(id_err: str, save: bool = True, fields: str = "") -> Dict[str, str]:

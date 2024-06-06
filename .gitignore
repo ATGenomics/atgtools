@@ -1,5 +1,6 @@
 *.txt
 *.csv
+*.tsv
 *.fastq
 *.fastq.gz
 dist/
@@ -9,3 +10,4 @@ tests/
 .pytest_cache/
 __pycache__/
 .idea
+.python-version
