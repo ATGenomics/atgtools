@@ -1,6 +1,5 @@
 import numpy as np
 import pandas as pd
-from icecream import ic
 
 
 def alpha_div():

@@ -5,23 +5,26 @@ from pathlib import Path
 from subprocess import PIPE
 from typing import Optional
 
-from colored import attr, fg
+from rich.console import Console
+from rich.theme import Theme
 
-CT = {
-    "def": attr("reset") + fg("white"),
-    "pchg": attr("reset") + attr("bold") + fg("deep_pink_1a"),
-    "prem": attr("reverse") + fg("light_cyan"),
-    "pname": attr("reset") + fg("chartreuse_1"),
-    "rname": attr("reset") + fg("light_goldenrod_2b"),
-    "bname": attr("reset") + fg("white"),
-    "fup": attr("reset") + fg("light_goldenrod_2b"),
-    "rmto": attr("reset") + fg("deep_sky_blue_3b"),
-    "cto": attr("reset") + fg("violet"),
-    "cinfo": attr("reset") + fg("deep_sky_blue_3b"),
-    "cstate": attr("reset") + fg("deep_pink_1a"),
-    "bell": "\a",
-    "reset": "\033[2J\033[H",
-}
+custom_theme = Theme(
+    {
+        "def": "white",
+        "pchg": "bold deep_pink1",
+        "prem": "reverse cyan",
+        "pname": "chartreuse1",
+        "rname": "light_goldenrod2",
+        "bname": "white",
+        "fup": "light_goldenrod2",
+        "rmto": "deep_sky_blue3",
+        "cto": "violet",
+        "cinfo": "deep_sky_blue3",
+        "cstate": "deep_pink1",
+    }
+)
+
+console = Console(theme=custom_theme)
 
 
 def search_repositories(path_dir: Optional[str]) -> list:
@@ -93,13 +96,14 @@ def verbosity(changes, show_stash: bool, rep: str, branch: str):
     if len(changes) > 0:
         print("  |--Local")
         for c in changes:
-            print(f"     |--{CT['cstate']}{c[0]}{CT['fup']} {c[1]}{CT['def']}")
+            console.print(f"     |--[cstate]{c[0]}[/cstate][fup] {c[1]}[/fup][def]")
+
     if show_stash:
         stashed = get_stashed(rep)
         if len(stashed):
             print("  |--Stashed")
             for num, s in enumerate(stashed):
-                print(f"     |-- {CT['cstate']}{num}{CT['def']}{s[0]} {s[2]}")
+                console.print(f"     |-- [cstate]{num}[/cstate][def]{s[0]} {s[2]}")
 
     def to_push_to_pull(rep: str, branch: str, to_function, to_str=str):
         remotes = get_remote_repositories(rep)
@@ -108,22 +112,16 @@ def verbosity(changes, show_stash: bool, rep: str, branch: str):
             if len(commits) > 0:
                 print(f"  |--{r}")
                 for commit in commits:
-                    li = f"{CT['cto']}[{to_str}]{CT['def']} {CT['cinfo']}{commit}{CT['def']}"
-                    print(f"     |--{li}")
+                    li = f"[cto][{to_str}][/cto] [cinfo]{commit}[/cinfo][def]"
+                    console.print(f"     |--{li}")
 
     if branch != "":
-        to_push_to_pull(
-            rep=rep, branch=branch, to_function=get_local_to_push, to_str="To Push"
-        )
-        to_push_to_pull(
-            rep=rep, branch=branch, to_function=get_remote_to_pull, to_str="To Pull"
-        )
+        to_push_to_pull(rep=rep, branch=branch, to_function=get_local_to_push, to_str="To Push")
+        to_push_to_pull(rep=rep, branch=branch, to_function=get_remote_to_pull, to_str="To Pull")
 
 
 # Check state of a git repository
-def check_repository(
-    rep: str, branch: str, show_stash, checkuntracked: bool, quiet: bool, verbose: bool
-):
+def check_repository(rep: str, branch: str, show_stash, checkuntracked: bool, quiet: bool, verbose: bool):
     changes = get_local_files_change(rep, checkuntracked)
     islocal = len(changes) > 0
 
@@ -151,7 +149,7 @@ def check_repository(
             action_needed = action_needed or (count > 0)
 
             if count > 0:
-                to_return += f" {CT['rname']}{r}{CT['def']}[{CT['rmto']}{to_str}:{CT['def']}{count}]"
+                to_return += f" [rname]{r}[/rname][def][rmto]{to_str}[/rmto][def]:{count}[/def]"
 
             return to_return, ischange, action_needed
 
@@ -188,18 +186,18 @@ def check_repository(
             repname = rep
 
         if ischange:
-            pname = f"{CT['pchg']}{repname}{CT['def']}"
+            pname = f"[pchg]{repname}[/pchg][def]"
         elif not bool(remotes):
-            pname = f"{CT['prem']}{repname}{CT['def']}"
+            pname = f"[prem]{repname}[/prem][def]"
         else:
-            pname = f"{CT['pname']}{repname}{CT['def']}"
+            pname = f"[pname]{repname}[/pname][def]"
 
         if islocal:
-            strlocal = f"{CT['rname']}Local{CT['def']}[{CT['rmto']}To Commit:{CT['def']}{len(changes)}]"
+            strlocal = f"[rname]Local[/rname][def][rmto]To Commit:[/rmto][def]{len(changes)}[/def]"
         else:
             strlocal = ""
 
-        print(f"{pname}/{CT['bname']}{branch} {strlocal}{topush}{topull}")
+        console.print(f"{pname}/[bname]{branch}[/bname] {strlocal}{topush}{topull}")
 
         if verbose:
             verbosity(changes, show_stash, rep, branch)
@@ -252,4 +250,4 @@ def gitcheck(
                 action_needed = True
 
     if action_needed and not bell_on_action_needed:
-        print(CT["bell"])
+        console.print("\a")

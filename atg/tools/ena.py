@@ -6,13 +6,12 @@ from typing import Dict, List, Tuple
 
 import pandas as pd
 import requests
-from icecream import ic
 from tabulate import tabulate
 from tqdm import tqdm
 from tqdm.contrib.concurrent import thread_map
 from urllib3 import util
 
-ic.configureOutput(prefix=" -> ")
+# ic.configureOutput(prefix=" -> ")
 
 
 def download_url(input_file: Tuple[str, str, Path]) -> None:

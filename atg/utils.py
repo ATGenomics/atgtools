@@ -10,7 +10,6 @@ from typing import Any
 import anndata as ad
 import pyfastx
 from click import Context
-from icecream import ic
 from typer.core import TyperGroup
 
 
