@@ -10,7 +10,6 @@ def create_manifest(fastq_dir: str, output_file: str, csv_format: bool) -> None:
     """
     Create a manifest file (tsv/csv) from a directory containing FASTQ files.
     """
-
     _fastq_dir = check_dir(fastq_dir)
 
     output_manifest: Dict[str, str] = {}

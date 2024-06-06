@@ -1,6 +1,7 @@
 import re
 import shutil
 import sys
+
 import time
 from enum import Enum
 from functools import wraps
@@ -9,6 +10,7 @@ from typing import Any
 
 import anndata as ad
 import pyfastx
+
 from click import Context
 from typer.core import TyperGroup
 
@@ -115,3 +117,4 @@ def count_fastq(fastq_file, pattern: str):
         index_file = Path(f"{str(v)}.fxi")
         if index_file.exists():
             index_file.unlink()
+

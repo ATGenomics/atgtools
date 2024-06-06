@@ -27,6 +27,7 @@ custom_theme = Theme(
 console = Console(theme=custom_theme)
 
 
+
 def search_repositories(path_dir: Optional[str]) -> list:
     did = Path.cwd() if path_dir is None else Path(path_dir).resolve()
     repos = [x.parent.as_posix() for x in did.glob("**/.git")]
@@ -98,12 +99,14 @@ def verbosity(changes, show_stash: bool, rep: str, branch: str):
         for c in changes:
             console.print(f"     |--[cstate]{c[0]}[/cstate][fup] {c[1]}[/fup][def]")
 
+
     if show_stash:
         stashed = get_stashed(rep)
         if len(stashed):
             print("  |--Stashed")
             for num, s in enumerate(stashed):
                 console.print(f"     |-- [cstate]{num}[/cstate][def]{s[0]} {s[2]}")
+
 
     def to_push_to_pull(rep: str, branch: str, to_function, to_str=str):
         remotes = get_remote_repositories(rep)
@@ -198,6 +201,7 @@ def check_repository(rep: str, branch: str, show_stash, checkuntracked: bool, qu
             strlocal = ""
 
         console.print(f"{pname}/[bname]{branch}[/bname] {strlocal}{topush}{topull}")
+
 
         if verbose:
             verbosity(changes, show_stash, rep, branch)

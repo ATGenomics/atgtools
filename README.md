@@ -6,6 +6,9 @@ This is a collection of tools for NGS data analysis. It provides many easy-to-us
 
 ## Installation
 
+
+Latest `atgtools` version: [![PyPI version](https://badge.fury.io/py/atgtools.svg)](https://badge.fury.io/py/atgtools)
+
 Recommended installation with [`pipx`](https://pypa.github.io/pipx/):
 
 ```bash

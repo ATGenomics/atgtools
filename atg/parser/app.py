@@ -8,6 +8,7 @@ parser_app = typer.Typer(
 )
 
 
+
 @parser_app.command(name="kraken")
 def kraken_parser_command():
     """

@@ -35,6 +35,7 @@ jobs:
       - name: Install library and dependencies
         run: |
             poetry install
+
             # - name: Run Tox (Pytest + Coverage)
             #   run: |
             #       poetry run tox
