@@ -6,7 +6,6 @@ from typing import Dict, List, Tuple
 
 import pandas as pd
 import requests
-
 from tabulate import tabulate
 from tqdm import tqdm
 from tqdm.contrib.concurrent import thread_map
@@ -35,7 +34,6 @@ def fix_urls(urls: list) -> Dict[str, str]:
             pass
         else:
             urls_dict[filename] = f"https://{url}"
-
 
     return urls_dict
 
@@ -135,9 +133,7 @@ def checksums(id_err: str, output_dir: Path, file_lst: List[str], threads: int) 
 
     chk = set(dfmd5["file"].to_list()) - set(file_lst)
 
-    def compare_lists(
-        df_md5: pd.DataFrame, test_list: List[str], outdir: Path, n_cpus: int
-    ) -> None:
+    def compare_lists(df_md5: pd.DataFrame, test_list: List[str], outdir: Path, n_cpus: int) -> None:
         compare = df_md5["file"].isin(test_list)
         missing_files = fix_urls(df_md5[compare]["fastq_ftp"].to_list())
         thread_map_urls(missing_files, outdir, n_cpus)

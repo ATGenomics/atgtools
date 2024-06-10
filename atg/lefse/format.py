@@ -15,9 +15,7 @@ app = typer.Typer()
 def read_input_file(inp_file):
     logger.info("read_input_file")
     with open(inp_file, encoding="utf-8") as inp:
-        data = [
-            [v.strip() for v in line.strip().split("\t")] for line in inp.readlines()
-        ]
+        data = [[v.strip() for v in line.strip().split("\t")] for line in inp.readlines()]
         return data
 
 
@@ -307,9 +305,7 @@ def format_input(
 
     if json_format:
         with open(output_file, "w", encoding="utf-8") as back_file:
-            back_file.write(
-                json.dumps(out, sort_keys=True, indent=4, ensure_ascii=False)
-            )
+            back_file.write(json.dumps(out, sort_keys=True, indent=4, ensure_ascii=False))
     else:
         with open(output_file, "wb") as back_file:
             pickle.dump(out, back_file)

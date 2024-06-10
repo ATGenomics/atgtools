@@ -2,5 +2,5 @@
 
 from atg import atg
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     atg()

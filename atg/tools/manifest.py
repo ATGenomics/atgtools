@@ -26,10 +26,7 @@ def create_manifest(fastq_dir: str, output_file: str, csv_format: bool) -> None:
             out = output
 
         for sample in prefix:
-            manifest[sample] = (
-                f"{_fastq_dir}/{sample}_R1.fastq.gz{sep}"
-                f"{_fastq_dir}/{sample}_R2.fastq.gz"
-            )
+            manifest[sample] = f"{_fastq_dir}/{sample}_R1.fastq.gz{sep}" f"{_fastq_dir}/{sample}_R2.fastq.gz"
 
         if out.is_file():
             print("There is a previous manifest file")

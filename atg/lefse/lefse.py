@@ -5,6 +5,7 @@ import random
 import numpy as np
 import rpy2.robjects as robjects
 import typer
+
 from atg.utils import CorrectionLevel
 
 app = typer.Typer()
@@ -76,9 +77,7 @@ def test_rep_wilcoxon_r(
     tot_ok = 0
     alpha_mtc = th
     all_diff = []
-    for pair in [
-        (x, y) for x in list(cl_hie.keys()) for y in list(cl_hie.keys()) if x < y
-    ]:
+    for pair in [(x, y) for x in list(cl_hie.keys()) for y in list(cl_hie.keys()) if x < y]:
         dir_cmp = "not_set"
         l_subcl1, l_subcl2 = [len(cl_hie[pair[0]]), len(cl_hie[pair[1]])]
         if mul_cor != 0:
@@ -112,9 +111,7 @@ def test_rep_wilcoxon_r(
                     cl_li = ["a" for _ in cl1] + ["b" for _ in cl2]
                     vec_cl = robjects.FactorVector(robjects.StrVector(cl_li))
                     robjects.globalenv["y"] = vec_cl
-                    pvw = robjects.r("pvalue(wilcox_test(x~y, data=data.frame(x, y)))")[
-                        0
-                    ]
+                    pvw = robjects.r("pvalue(wilcox_test(x~y, data=data.frame(x, y)))")[0]
                     tresw = pvw < alpha_mtc * 2.0
                 if first:
                     first = False
@@ -212,9 +209,7 @@ def test_lda_r(clslda, featslda, cl_sl, boots, fract_sample, lda_th, tol_min, nl
 
             for i, v in enumerate(featslda[k]):
                 if featslda["class"][i] == c:
-                    nor_var = random.normalvariate(
-                        0.0, max(featslda[k][i] * 0.05, 0.01)
-                    )
+                    nor_var = random.normalvariate(0.0, max(featslda[k][i] * 0.05, 0.01))
                     featslda[k][i] = math.fabs(featslda[k][i] + nor_var)
 
     rdict = {}
@@ -260,9 +255,7 @@ def test_lda_r(clslda, featslda, cl_sl, boots, fract_sample, lda_th, tol_min, nl
         for p in pairs:
             robjects.globalenv["rand_s"] = robjects.IntVector(rand_s)
             robjects.globalenv["sub_d"] = robjects.r("d[rand_s,]")
-            robjects.r(
-                f"z <- suppressWarnings(lda(as.formula({f}), data=sub_d, tol={str(tol_min)}))"
-            )
+            robjects.r(f"z <- suppressWarnings(lda(as.formula({f}), data=sub_d, tol={str(tol_min)}))")
             robjects.r("w <- z$scaling[, 1]")
             robjects.r("w.unit <- w / sqrt(sum(w ^ 2))")
             robjects.r("ss <- sub_d[, -match('class', colnames(sub_d))]")
@@ -292,9 +285,7 @@ def test_lda_r(clslda, featslda, cl_sl, boots, fract_sample, lda_th, tol_min, nl
             for pp in [p[0], p[1]]:
                 pp_v = (
                     pp,
-                    [float(ff) for ff in rres.rx(pp, True)]
-                    if pp in rowns
-                    else [0.0] * lenc,
+                    [float(ff) for ff in rres.rx(pp, True)] if pp in rowns else [0.0] * lenc,
                 )
                 res_list.append(pp_v)
             res = dict(res_list)
@@ -400,10 +391,7 @@ def run_lefse(
             print("wilc ok\t")
 
     if len(feats) > 0:
-        print(
-            f"Number of significantly discriminative features: "
-            f"{len(feats)} ({kw_n_ok}) before internal wilcoxon"
-        )
+        print(f"Number of significantly discriminative features: " f"{len(feats)} ({kw_n_ok}) before internal wilcoxon")
         k_zero = [(k, 0.0) for k, v in list(feats.items())]
         k_v = list(list(feats.items()))
 
@@ -421,10 +409,7 @@ def run_lefse(
                 nlogs,
             )
     else:
-        print(
-            f"Number of significantly discriminative features: "
-            f"{len(feats)} ({kw_n_ok}) before internal wilcoxon"
-        )
+        print(f"Number of significantly discriminative features: " f"{len(feats)} ({kw_n_ok}) before internal wilcoxon")
         print("No features with significant differences between the two classes")
         lda_res, lda_res_th = {}, {}
 
@@ -435,8 +420,5 @@ def run_lefse(
         "cls_means_kord": kord,
         "wilcox_res": wilcoxon_res,
     }
-    print(
-        f"Number of discriminative features with abs LDA score > "
-        f"{lda_abs_th}: {len(lda_res_th)}"
-    )
+    print(f"Number of discriminative features with abs LDA score > " f"{lda_abs_th}: {len(lda_res_th)}")
     save_res(outres, output_file)

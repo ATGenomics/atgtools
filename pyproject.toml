@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "atgtools"
-version = "0.1.8a3"
+version = "0.1.8"
 description = ""
 authors = ["Otoniel Maya <otto94@gmail.com>"]
 license = "MIT"
@@ -58,6 +58,6 @@ exclude = '''
 
 [tool.isort]
 # make it compatible with black
-profile = "black" 
+profile = "black"
 
 [tool.tox]

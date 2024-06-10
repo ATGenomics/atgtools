@@ -78,14 +78,10 @@ def plot_histo(
         cls2 = sorted(pall_feats.split(":"))
     cls = sorted(datahor["cls"])
     if bcl:
-        datahor["rows"].sort(
-            key=lambda ab: math.fabs(float(ab[3])) * (cls.index(ab[2]) * 2 - 1)
-        )
+        datahor["rows"].sort(key=lambda ab: math.fabs(float(ab[3])) * (cls.index(ab[2]) * 2 - 1))
     else:
         mmax = max(math.fabs(float(a)) for a in list(zip(*datahor["rows"]))[3])
-        datahor["rows"].sort(
-            key=lambda ab: math.fabs(float(ab[3])) / mmax + (cls.index(ab[2]) + 1)
-        )
+        datahor["rows"].sort(key=lambda ab: math.fabs(float(ab[3])) / mmax + (cls.index(ab[2]) + 1))
     pos = np.arange(len(datahor["rows"]))
     head = 0.75
     tail = 0.5

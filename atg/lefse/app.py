@@ -3,10 +3,20 @@ import typer
 from atg.lefse.format import format_input
 from atg.lefse.lefse import run_lefse
 from atg.lefse.plot import plot_results
-from atg.utils import BackgroundColor, CorrectionLevel, FeaturesDir, OrderCommands, OutputFormat
+from atg.utils import (
+    BackgroundColor,
+    CorrectionLevel,
+    FeaturesDir,
+    OrderCommands,
+    OutputFormat,
+)
 
 lefse_app = typer.Typer(
-    help="LEfSe implementation", cls=OrderCommands, no_args_is_help=True, add_completion=False, rich_markup_mode="rich"
+    help="LEfSe implementation",
+    cls=OrderCommands,
+    no_args_is_help=True,
+    add_completion=False,
+    rich_markup_mode="rich",
 )
 
 
@@ -91,7 +101,6 @@ def format_lefse_command(
 @lefse_app.command(name="run")
 def run_lefse_command(
     input_file: str = typer.Option(..., "--input", "-i", show_default=False, help="the pickle input file"),
-
     output_file: str = typer.Option(
         ...,
         "--output",
@@ -122,7 +131,6 @@ def run_lefse_command(
     ),
     nlogs: int = typer.Option(3, "--nlogs", "-n", show_default=True, help="max log influence of LDA coeff"),
     verbose: bool = typer.Option(False, "--verbose", "-v", show_default=True, help="verbose execution"),
-
     wilc: bool = typer.Option(
         True,
         "--wilc",
@@ -143,7 +151,6 @@ def run_lefse_command(
         "-e",
         show_default=True,
         help="set whether perform the wilcoxon test only " "among the subclasses with the same name",
-
     ),
     curv: bool = typer.Option(
         False,
@@ -151,7 +158,6 @@ def run_lefse_command(
         "-r",
         show_default=True,
         help="set whether perform the wilcoxon testing the Curtis's approach " "[BETA VERSION] (default 0)",
-
     ),
     f_boots: float = typer.Option(
         0.67,
@@ -159,7 +165,6 @@ def run_lefse_command(
         "-f",
         show_default=True,
         help="set the subsampling fraction value for each bootstrap " "iteration (default 0.66666)",
-
     ),
     strict: CorrectionLevel = typer.Option(
         "0",
@@ -222,7 +227,6 @@ def run_lefse_command(
 def plot_lefse_command(
     input_file: str = typer.Option(..., "--input", "-i", show_default=False, help="tab delimited input file"),
     output_file: str = typer.Option(..., "--output", "-o", show_default=False, help="the file for the output image"),
-
     feature_font_size: int = typer.Option(
         7,
         "--feature-font-size",
@@ -239,7 +243,6 @@ def plot_lefse_command(
     ),
     dpi: int = typer.Option(300, "--dpi", show_default=True, help="the dpi for the output image"),
     title: str = typer.Option("", "--title", "-t", show_default=False, help="the title for the plot"),
-
     title_font_size: int = typer.Option(
         12,
         "--title-font-size",
@@ -256,7 +259,6 @@ def plot_lefse_command(
     ),
     width: int = typer.Option(7, "--width", "-w", show_default=True, help="the width of the plot"),
     left_space: float = typer.Option(0.2, "--left-space", "-ls", show_default=True, help="the left space of the plot"),
-
     right_space: float = typer.Option(
         0.1,
         "--right-space",
@@ -265,7 +267,6 @@ def plot_lefse_command(
         help="the right space of the plot",
     ),
     autoscale: bool = typer.Option(True, "--autoscale", "-a", show_default=True, help="autoscale the plot"),
-
     back_color: BackgroundColor = typer.Option(
         "w", "--background-color", "-bc", show_default=True, help="the background color"
     ),
@@ -285,7 +286,6 @@ def plot_lefse_command(
         help="the maximum length of the feature name",
     ),
     all_feats: str = typer.Option("", "--all-feats", "-af", show_default=False, help="show all features"),
-
     otu_only: bool = typer.Option(
         False,
         "--otu-only",
