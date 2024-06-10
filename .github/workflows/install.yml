@@ -35,14 +35,13 @@ jobs:
       - name: Install library and dependencies
         run: |
             poetry install
-
-            # - name: Run Tox (Pytest + Coverage)
-            #   run: |
-            #       poetry run tox
+      - name: Run Tox
+        run: |
+            poetry run tox
             #   env:
             #       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
             #       PLATFORM: ${{ matrix.os }}
-    
+
             # - name: Upload Results to CodeCov
             #   if: success()
             #   uses: codecov/codecov-action@v3
@@ -53,4 +52,3 @@ jobs:
             #       flags: unittests
             #       name: "${{ matrix.os }} - Python ${{ matrix.python-version }}"
             #       token: ${{ secrets.CODECOV_TOKEN }}
-    
