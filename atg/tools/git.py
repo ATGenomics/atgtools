@@ -116,12 +116,18 @@ def verbosity(changes, show_stash: bool, rep: str, branch: str):
                     console.print(f"     |--{li}")
 
     if branch != "":
-        to_push_to_pull(rep=rep, branch=branch, to_function=get_local_to_push, to_str="To Push")
-        to_push_to_pull(rep=rep, branch=branch, to_function=get_remote_to_pull, to_str="To Pull")
+        to_push_to_pull(
+            rep=rep, branch=branch, to_function=get_local_to_push, to_str="To Push"
+        )
+        to_push_to_pull(
+            rep=rep, branch=branch, to_function=get_remote_to_pull, to_str="To Pull"
+        )
 
 
 # Check state of a git repository
-def check_repository(rep: str, branch: str, show_stash, checkuntracked: bool, quiet: bool, verbose: bool):
+def check_repository(
+    rep: str, branch: str, show_stash, checkuntracked: bool, quiet: bool, verbose: bool
+):
     changes = get_local_files_change(rep, checkuntracked)
     islocal = len(changes) > 0
 
@@ -149,7 +155,9 @@ def check_repository(rep: str, branch: str, show_stash, checkuntracked: bool, qu
             action_needed = action_needed or (count > 0)
 
             if count > 0:
-                to_return += f" [rname]{r}[/rname][def][rmto]{to_str}[/rmto][def]:{count}[/def]"
+                to_return += (
+                    f" [rname]{r}[/rname][def][rmto]{to_str}[/rmto][def]:{count}[/def]"
+                )
 
             return to_return, ischange, action_needed
 
@@ -193,7 +201,7 @@ def check_repository(rep: str, branch: str, show_stash, checkuntracked: bool, qu
             pname = f"[pname]{repname}[/pname][def]"
 
         if islocal:
-            strlocal = f"[rname]Local[/rname][def][rmto]To Commit:[/rmto][def]{len(changes)}[/def]"
+            strlocal = f"[rname]Local[/rname][def][rmto] To Commit:[/rmto][def]{len(changes)}[/def]"
         else:
             strlocal = ""
 

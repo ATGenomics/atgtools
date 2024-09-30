@@ -6,7 +6,7 @@ from psutil import cpu_count
 from atg.tools.ena import ena_download, ena_fields, ena_retrieve
 from atg.tools.git import gitcheck
 from atg.tools.manifest import create_manifest
-from atg.utils import OrderCommands, count_fastq, one_liner
+from atg.utils import OrderCommands, count_fastq, get_abundance, one_liner
 
 tools_app = typer.Typer(
     help="Miscellaneous tools",
@@ -46,7 +46,9 @@ fastq_md5
 
 @tools_app.command(name="manifest")
 def manifest_tools_command(
-    fastq_dir: str = typer.Option(..., "--fastq_dir", "-d", show_default=False, help=ROOT_COMMAND_HELP),
+    fastq_dir: str = typer.Option(
+        ..., "--fastq_dir", "-d", show_default=False, help=ROOT_COMMAND_HELP
+    ),
     output_file: str = typer.Option(
         "manifest.tsv",
         "--output",
@@ -54,7 +56,9 @@ def manifest_tools_command(
         show_default=False,
         help="Output file name. [default: manifest.tsv]",
     ),
-    csv_format: bool = typer.Option(False, "--csv", "-c", help="Output CSV file format"),
+    csv_format: bool = typer.Option(
+        False, "--csv", "-c", help="Output CSV file format"
+    ),
 ):
     """
     Create the manifest.[tsv/csv] file for QIIME2. [default: tsv]
@@ -75,9 +79,13 @@ def oneliner_tools_command(
 
 @tools_app.command(name="download")
 def download_tools_command(
-    bioproject: str = typer.Option(..., "--bioproject", "-i", show_default=False, help="BioProject ID"),
+    bioproject: str = typer.Option(
+        ..., "--bioproject", "-i", show_default=False, help="BioProject ID"
+    ),
     cpus: int = typer.Option(cpu_count(), "--cpus", "-p", help="Threads"),
-    fields: str = typer.Option(None, "--fields", "-f", show_default=False, help=ENA_DEFAULT_PARAMS_HELP),
+    fields: str = typer.Option(
+        None, "--fields", "-f", show_default=False, help=ENA_DEFAULT_PARAMS_HELP
+    ),
 ):
     """
     Download the ENA data for a given accession number.
@@ -106,9 +114,13 @@ def retrieve_tools_command(
 
 @tools_app.command(name="search")
 def search_tools_command(
-    bioproject: str = typer.Option(..., "--bioproject", "-i", show_default=False, help="BioProject ID"),
+    bioproject: str = typer.Option(
+        ..., "--bioproject", "-i", show_default=False, help="BioProject ID"
+    ),
     save: bool = typer.Option(True, "--save", "-s", help="Save the results to a file"),
-    fields: str = typer.Option(None, "--fields", "-f", show_default=False, help=ENA_DEFAULT_PARAMS_HELP),
+    fields: str = typer.Option(
+        None, "--fields", "-f", show_default=False, help=ENA_DEFAULT_PARAMS_HELP
+    ),
 ):
     """
     Retrieve the ENA data for a given accesion number.
@@ -118,14 +130,30 @@ def search_tools_command(
 
 @tools_app.command(name="git")
 def git_tools_command(
-    verbose: bool = typer.Option(False, "--verbose", "-v", show_default=False, help="Show files & commits"),
-    checkremote: bool = typer.Option(False, "--remote", "-r", show_default=False, help="Force remote update"),
-    checkuntracked: bool = typer.Option(False, "--untracked", "-u", help="Show untracked files"),
-    bell_on_action_needed: bool = typer.Option(True, "--bell", "-b", help="Bell on action needed"),
-    search_dir: str = typer.Option(None, "--dir", "-d", help="Search <dir> for repositories"),
-    quiet: bool = typer.Option(False, "--quiet", "-q", help="Display info only when repository needs action"),
-    checkall: bool = typer.Option(False, "--all-branch", "-a", help="Show the status of all branches"),
-    show_stash: bool = typer.Option(False, "--stash", "-s", help="Show number of stashed changes"),
+    verbose: bool = typer.Option(
+        False, "--verbose", "-v", show_default=False, help="Show files & commits"
+    ),
+    checkremote: bool = typer.Option(
+        False, "--remote", "-r", show_default=False, help="Force remote update"
+    ),
+    checkuntracked: bool = typer.Option(
+        False, "--untracked", "-u", help="Show untracked files"
+    ),
+    bell_on_action_needed: bool = typer.Option(
+        True, "--bell", "-b", help="Bell on action needed"
+    ),
+    search_dir: str = typer.Option(
+        None, "--dir", "-d", help="Search <dir> for repositories"
+    ),
+    quiet: bool = typer.Option(
+        False, "--quiet", "-q", help="Display info only when repository needs action"
+    ),
+    checkall: bool = typer.Option(
+        False, "--all-branch", "-a", help="Show the status of all branches"
+    ),
+    show_stash: bool = typer.Option(
+        False, "--stash", "-s", help="Show number of stashed changes"
+    ),
 ):
     """
     Check multiple git repository in one pass
@@ -151,6 +179,15 @@ def count_tools_command(
         show_default=False,
         help="FASTQ file or directory with FASTQ files",
     ),
-    pattern: str = typer.Option("--pattern", "-p", show_default=False, help="string regex pattern"),
+    pattern: str = typer.Option(
+        "--pattern", "-p", show_default=False, help="string regex pattern"
+    ),
 ):
+    """Count the number of reads in a FASTQ file"""
     count_fastq(fastq_file=input_fq, pattern=pattern)
+
+
+@tools_app.command(name="abundance")
+def abundance_tools_command():
+    """Relative abundance tables"""
+    print(get_abundance())
