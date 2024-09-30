@@ -4,8 +4,22 @@ repos:
     hooks:
       - id: trailing-whitespace
       - id: end-of-file-fixer
+      - id: check-toml
       - id: check-yaml
+      - id: end-of-file-fixer
       - id: check-added-large-files
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.6.4
+    hooks:
+      - id: ruff
+        args: [--fix]
+      - id: ruff-format
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v1.8.0
+    hooks:
+      - id: mypy
+        args: [--strict, --ignore-missing-imports, --allow-untyped-decorators]
+        additional_dependencies: [pandas-stubs, types-requests]
   - repo: local
     hooks:
       - id: jupyter-nb-clear-output
@@ -15,26 +29,6 @@ repos:
         language: python
         entry: jupyter nbconvert --ClearOutputPreprocessor.enabled=True --inplace
         additional_dependencies: [jupyter]
-        # - id: ruff
-        #   name: ruff
-        #   entry: ruff check
-        #   language: system
-        #   types: [file, python]
-        # - id: ruff-format
-        #   name: ruff-format
-        #   entry: ruff format
-        #   language: system
-        # types: [file, python]
-      - id: black
-        name: black
-        entry: black
-        language: system
-        types: [file, python]
-      - id: isort
-        name: isort
-        entry: isort
-        language: system
-        types: [file, python]
       - id: nbqa-black
         name: nbqa-black
         description: Run 'black' on a Jupyter Notebook
