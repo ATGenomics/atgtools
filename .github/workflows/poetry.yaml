@@ -1,8 +1,9 @@
-name: Installation
+name: Poetry CI
 
 on:
   push:
     branches:
+      - feature/*
       - main
   pull_request:
     branches:
@@ -40,8 +41,10 @@ jobs:
           path: ./.venv
           key: venv-${{ runner.os }}-${{ hashFiles('poetry.lock') }}
 
-      - name: Poetry install
-        run: poetry install
+      - name: Tox and Poetry install
+        run: |
+          pip install tox
+          poetry install
 
       - name: Run tests
         run: poetry run tox -e ${{ matrix.python.toxenv }}
