@@ -6,6 +6,7 @@ import typer
 from atg.div.app import div_app
 from atg.lefse.app import lefse_app
 from atg.parser.app import parser_app
+from atg.plots.app import plot_app
 from atg.tools.app import tools_app
 from atg.utils import OrderCommands
 
@@ -37,17 +38,17 @@ def app_version():
 # Tools
 main_app.add_typer(typer_instance=tools_app, name="tools")
 
+# Parser
+main_app.add_typer(typer_instance=parser_app, name="parser")
+
+# Diversity
+main_app.add_typer(typer_instance=div_app, name="div")
+
 # LEfSe
 main_app.add_typer(typer_instance=lefse_app, name="lefse")
-#
-# # Parser
-# main_app.add_typer(typer_instance=parser_app, name="parser")
-#
-# # Plots
-# # main_app.add_typer(typer_instance=plot_app, name="plot")
-#
-# # Stats
+
+# Plots
+main_app.add_typer(typer_instance=plot_app, name="plot")
+
+# Stats
 # # main_app.add_typer(typer_instance=stats_app, name="stats")
-#
-# # Diversity
-# main_app.add_typer(typer_instance=div_app, name="div")
