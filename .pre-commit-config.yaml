@@ -12,7 +12,7 @@ repos:
     rev: v0.6.4
     hooks:
       - id: ruff
-        args: [--fix]
+        args: [--extend-select, I, --fix]
       - id: ruff-format
   - repo: https://github.com/pre-commit/mirrors-mypy
     rev: v1.8.0
@@ -22,26 +22,27 @@ repos:
         additional_dependencies: [pandas-stubs, types-requests]
   - repo: local
     hooks:
+      - id: pytest
+        name: Run pytest
+        entry: pytest
+        language: system
+        types: [python]
+        stages: [commit]
+        args: [--no-header, -vx, --cov-report, term:skip-covered, --cov=atg, atg/tests/]
+  - repo: local
+    hooks:
       - id: jupyter-nb-clear-output
         name: jupyter-nb-clear-output
         files: \.ipynb$
         stages: [commit]
         language: python
-        entry: jupyter nbconvert --ClearOutputPreprocessor.enabled=True --inplace
-        additional_dependencies: [jupyter]
-      - id: nbqa-black
-        name: nbqa-black
-        description: Run 'black' on a Jupyter Notebook
-        entry: nbqa black
+        entry: nb-clean clean --remove-empty-cells
+        additional_dependencies: [nb-clean]
+      - id: nbqa-ruff
+        name: nbqa-ruff
+        description: Run 'ruff' on a Jupyter Notebook
+        entry: nbqa ruff
         language: python
         require_serial: true
         types: [jupyter]
-        additional_dependencies: [black]
-      - id: nbqa-isort
-        name: nbqa-isort
-        description: Run 'isort' on a Jupyter Notebook
-        entry: nbqa isort
-        language: python
-        require_serial: true
-        types: [jupyter]
-        additional_dependencies: [isort]
+        additional_dependencies: [ruff]
