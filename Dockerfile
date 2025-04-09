@@ -5,18 +5,19 @@ ARG DEBIAN_FRONTEND=noninteractive
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
     build-essential \
-    pipx \
     r-base \
     r-base-dev \
     && rm -rf /var/lib/apt/lists/*
 
-RUN pipx install poetry
-ENV PATH="/root/.local/bin:${PATH}"
+COPY pyproject.toml .
+COPY atg/ atg/
+COPY main.py .
 
-COPY . .
+RUN echo '#!/bin/bash\nset -e\n\nexec uv run python -m atg "$@"' > /usr/local/bin/entrypoint.sh && \
+    chmod +x /usr/local/bin/entrypoint.sh
 
-RUN poetry config virtualenvs.create true && \
-    poetry config virtualenvs.in-project true && \
-    poetry install --no-root --no-dev --no-interaction
+RUN uv venv --python 3.12 && \
+    uv sync
 
-ENTRYPOINT ["poetry", "run", "python", "-m", "atg"]
+ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
+
