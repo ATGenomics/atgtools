@@ -15,7 +15,7 @@ try:
 except PackageNotFoundError:
     pyproject = Path(__file__).parents[1] / "pyproject.toml"
 
-    with open(pyproject) as f:
+    with open(pyproject, encoding="utf-8") as f:
         toml = f.read()
 
     version = next(x for x in toml.splitlines() if x.startswith("version"))
