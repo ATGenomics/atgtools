@@ -1,6 +1,5 @@
 import re
 import shutil
-import sys
 import time
 from enum import Enum
 from functools import wraps
@@ -10,6 +9,7 @@ from typing import Any
 import anndata as ad
 import pyfastx
 from click import Context
+from loguru import logger
 from typer.core import TyperGroup
 
 
@@ -24,7 +24,7 @@ def timeit(f: Any) -> Any:
         result = f(*args, **kargs)
         end = time.time()
         res = round((end - start), 4)
-        print(f"Elapsed time {f.__name__}: {res} secs", end="\n")
+        logger.info(f"Elapsed time {f.__name__}: {res} secs")
         return result
 
     return wrapper
@@ -53,29 +53,29 @@ def one_liner(input_fasta: str) -> None:
 
 
 class FeaturesDir(str, Enum):
-    rows = "r"
-    cols = "c"
+    ROWS = "r"
+    COLS = "c"
 
 
 class CorrectionLevel(str, Enum):
-    no_correction = 0
-    independent_comp = 1
-    dependent_comp = 2
+    NO_CORRECTION = 0
+    INDEPENDENT_COMP = 1
+    DEPENDENT_COMP = 2
 
 
 class OutputFormat(str, Enum):
-    png = "png"
-    svg = "svg"
-    pdf = "pdf"
+    PNG = "png"
+    SVG = "svg"
+    PDF = "pdf"
 
 
 class BackgroundColor(str, Enum):
-    white = "w"
-    black = "k"
+    WHITE = "w"
+    BLACK = "k"
 
 
 class OrderCommands(TyperGroup):
-    def list_commands(self, ctx: Context):
+    def list_commands(self, _ctx: Context):
         """Return list of commands in the order appear."""
         return list(self.commands)
 
@@ -87,11 +87,19 @@ def get_abundance():
     return se.to_df().T.reset_index()
 
 
-def check_dir(fastq_dir: str):
+def check_dir(fastq_dir: str) -> Path:
+    """
+    Check if a directory exists and is not empty.
+
+    Args:
+        fastq_dir: Path to the directory to check
+
+    Returns:
+        Path: Resolved path to the directory
+    """
     _fastq_dir = Path(fastq_dir).resolve()
     if not any(Path(_fastq_dir).iterdir()):
-        print(f"{_fastq_dir.stem}/ is empty")
-        sys.exit(1)
+        raise FileNotFoundError(f"{_fastq_dir.stem}/ is empty")
     return _fastq_dir
 
 
@@ -111,7 +119,7 @@ def fastq_files(fastq: str, pattern: str) -> list:
 def count_fastq(fastq_file, pattern: str):
     _fastq_files = fastq_files(fastq=fastq_file, pattern=pattern)
     for k, v in _fastq_files.items():
-        print(k, len(pyfastx.Fastq(str(v), build_index=True)))
+        print(k, len(pyfastx.Fastx(str(v), build_index=True)))
         index_file = Path(f"{str(v)}.fxi")
         if index_file.exists():
             index_file.unlink()
