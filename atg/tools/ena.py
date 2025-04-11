@@ -15,13 +15,47 @@ from urllib3 import util
 
 
 def download_url(input_file: Tuple[str, str, Path]) -> None:
+    """Downloads a file from a URL with retry logic and progress bar.
+    
+    Parameters
+    ----------
+    input_file : Tuple[str, str, Path]
+        Tuple containing (filename, url, output_directory)
+    """
     fname, url, output_dir = input_file[0], input_file[1], input_file[2]
-    r = requests.get(url, stream=True, allow_redirects=True, timeout=20)
-    file_size = int(r.headers.get("Content-Length", 0))
-
-    with tqdm.wrapattr(r.raw, "read", total=file_size, desc=fname) as r_raw:
-        with open(output_dir / fname, "wb") as file:
-            shutil.copyfileobj(r_raw, file)
+    
+    session = requests.Session()
+    retry = util.Retry(
+        total=5,
+        backoff_factor=1,
+        status_forcelist=[500, 502, 503, 504, 429],
+        allowed_methods=["GET"]
+    )
+    adapter = requests.adapters.HTTPAdapter(max_retries=retry)
+    session.mount("https://", adapter)
+    
+    try:
+        r = session.get(url, stream=True, allow_redirects=True, timeout=30)
+        r.raise_for_status()
+        
+        file_size = int(r.headers.get("Content-Length", 0))
+        
+        with tqdm.wrapattr(r.raw, "read", total=file_size, desc=fname) as r_raw:
+            with open(output_dir / fname, "wb") as file:
+                shutil.copyfileobj(r_raw, file)
+                
+    except requests.exceptions.Timeout:
+        print(f"Timeout downloading {fname}. Please retry later.")
+        raise
+    except requests.exceptions.HTTPError as e:
+        print(f"HTTP error downloading {fname}: {e}")
+        raise
+    except requests.exceptions.ConnectionError:
+        print(f"Connection error downloading {fname}. Please check your internet connection.")
+        raise
+    except Exception as e:
+        print(f"Error downloading {fname}: {e}")
+        raise
 
 
 def fix_urls(urls: list) -> Dict[str, str]:
@@ -76,7 +110,7 @@ def request_get(api: str, pdict: str, fields: str, safe: str = ",") -> pd.DataFr
 
 
 def ena_fields(id_err: str, save: bool = True, fields: str = "") -> Dict[str, str]:
-    if fields is None:
+    if not fields:
         fields = (
             "study_accession,sample_accession,"
             "experiment_accession,run_accession,"
@@ -183,13 +217,14 @@ def ena_retrieve(keywords: str, save: bool, only_ids: bool):
         print(tabulate(df, headers="keys", showindex=False, tablefmt="plain"))
 
 
-def ena_download(bioproject: str, cpus: int, fields: str = None) -> None:
+def ena_download(bioproject: str, cpus: int, fields: str = None, output_base_dir: Path = None) -> None:
     """
     Download FASTQ files from ENA given accession number.
     """
     err_id = bioproject
     threads = cpus
-    out_dir = Path.cwd() / err_id
+    base_path = output_base_dir if output_base_dir else Path.cwd()
+    out_dir = base_path / err_id
     out_dir.mkdir(parents=True, exist_ok=True)
 
     files = [x.name for x in Path.glob(out_dir, "*.fastq.gz")]
