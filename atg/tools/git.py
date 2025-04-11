@@ -60,10 +60,9 @@ def get_branches(rep: str, only_default: bool = True):
 
 
 def get_local_files_change(rep: str, checkuntracked: bool):
-    snbchange = re.compile(r"^(.{2}) (.*)")
     result = git_exec(rep, f"status -s{'' if checkuntracked else 'uno'}")
-    lines = result.split("\n")
-    return [[m.group(1), m.group(2)] for x in lines if (m := snbchange.match(x))]
+    lines = [line for line in result.split("\n") if line.strip()]
+    return [[line[:2], line[3:]] for line in lines]
 
 
 def get_remote_repositories(rep):
@@ -124,7 +123,6 @@ def verbosity(changes, show_stash: bool, rep: str, branch: str):
         )
 
 
-# Check state of a git repository
 def check_repository(
     rep: str, branch: str, show_stash, checkuntracked: bool, quiet: bool, verbose: bool
 ):
@@ -135,7 +133,7 @@ def check_repository(
         islocal = islocal or len(get_stashed(rep)) > 0
 
     ischange = islocal
-    action_needed = False
+    action_needed = islocal
     topush = topull = ""
     repname = remotes = None
 
@@ -159,7 +157,7 @@ def check_repository(
                     f" [rname]{r}[/rname][def][rmto]{to_str}[/rmto][def]:{count}[/def]"
                 )
 
-            return to_return, ischange, action_needed
+        return to_return, ischange, action_needed
 
     if branch != "":
         remotes = get_remote_repositories(rep)
@@ -221,12 +219,10 @@ def get_stashed(rep):
     return split_lines
 
 
-# Check all git repositories
 def gitcheck(
     verbose: bool,
     checkremote: bool,
     checkuntracked: bool,
-    bell_on_action_needed: bool,
     search_dir: str,
     quiet: bool,
     checkall: str,
@@ -247,15 +243,15 @@ def gitcheck(
             branch = get_branches(r)
 
         for b in branch:
-            if check_repository(
+            repo_action_needed = check_repository(
                 rep=r,
                 branch=b,
                 show_stash=show_stash,
                 checkuntracked=checkuntracked,
                 quiet=quiet,
                 verbose=verbose,
-            ):
+            )
+            if repo_action_needed:
                 action_needed = True
 
-    if action_needed and not bell_on_action_needed:
-        console.print("\a")
+    return action_needed
