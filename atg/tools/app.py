@@ -162,7 +162,6 @@ def git_tools_command(
         verbose=verbose,
         checkremote=checkremote,
         checkuntracked=checkuntracked,
-        bell_on_action_needed=bell_on_action_needed,
         search_dir=search_dir,
         quiet=quiet,
         checkall=checkall,
