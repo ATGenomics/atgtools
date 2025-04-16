@@ -208,7 +208,7 @@ def test_lda_r(clslda, featslda, cl_sl, boots, fract_sample, lda_th, tol_min, nl
 
         for c in clss:
             max_class = max(float(featslda["class"].count(c)) * 0.5, 4)
-            if len({[float(v[1]) for v in ff if v[0] == c]}) > max_class:
+            if len(set([float(v[1]) for v in ff if v[0] == c])) > max_class:
                 continue
 
             for i, v in enumerate(featslda[k]):
@@ -242,7 +242,7 @@ def test_lda_r(clslda, featslda, cl_sl, boots, fract_sample, lda_th, tol_min, nl
         for b in set(clslda["class"]):
             if a > b:
                 pairs.append((a, b))
-    k = None
+
     for k in fk:
         for i in range(boots):
             means[k].append([])
@@ -256,31 +256,41 @@ def test_lda_r(clslda, featslda, cl_sl, boots, fract_sample, lda_th, tol_min, nl
                 break
 
         rand_s = [r + 1 for r in rand_s]
-        means[k][i] = []
+        means[fk[0]][i] = []  # Initialize for first feature
 
         for p in pairs:
             robjects.globalenv["rand_s"] = robjects.IntVector(rand_s)
             robjects.globalenv["sub_d"] = robjects.r("d[rand_s,]")
-            robjects.r(
-                f"z <- suppressWarnings(lda(as.formula({f}), data=sub_d, tol={str(tol_min)}))"
+            z = robjects.r(
+                "z <- suppressWarnings(lda(as.formula("
+                + f
+                + "),data=sub_d, tol="
+                + str(tol_min)
+                + "))"
             )
-            robjects.r("w <- z$scaling[, 1]")
-            robjects.r("w.unit <- w / sqrt(sum(w ^ 2))")
-            robjects.r("ss <- sub_d[, -match('class', colnames(sub_d))]")
+            robjects.r("w <- z$scaling[,1]")
+            robjects.r("w.unit <- w/sqrt(sum(w^2))")
+            robjects.r('ss <- sub_d[,-match("class", colnames(sub_d))]')
 
             if "subclass" in featslda:
-                robjects.r("ss <- ss[, -match('subclass', colnames(ss))]")
+                robjects.r('ss <- ss[,-match("subclass", colnames(ss))]')
 
             if "subject" in featslda:
-                robjects.r("ss <- ss[, -match('subject', colnames(ss))]")
+                robjects.r('ss <- ss[,-match("subject", colnames(ss))]')
 
             robjects.r("xy.matrix <- as.matrix(ss)")
-            robjects.r("LD <- xy.matrix %*% w.unit")
+            robjects.r("LD <- xy.matrix%*%w.unit")
             robjects.r(
-                f"effect.size <- abs(mean(LD[sub_d[, 'class'] == '{p[0]}']) - mean(LD[sub_d[, 'class'] == '{p[1]}'']))"
+                'effect.size <- abs(mean(LD[sub_d[,"class"]=="'
+                + p[0]
+                + '"]) - mean(LD[sub_d[,"class"] =="'
+                + p[1]
+                + '"]))'
             )
-            scal = robjects.r("wfinal <- w.unit * effect.size")
-            rres = robjects.r("mm <- z$means")
+            robjects.r("wfinal <- w.unit * effect.size")
+            scal = robjects.r("wfinal")
+            robjects.r("mm <- z$means")
+            rres = robjects.r("mm")
             rowns = list(rres.rownames)
             lenc = len(list(rres.colnames))
             coeff = []
@@ -317,7 +327,7 @@ def test_lda_r(clslda, featslda, cl_sl, boots, fract_sample, lda_th, tol_min, nl
 def save_res(res, filename):
     with open(filename, "w", encoding="utf-8") as out:
         for k, v in list(res["cls_means"].items()):
-            out.write(k + "\t" + str(math.log(max(v, 1.0), 10.0)) + "\t")
+            out.write(k + "\t" + str(math.log(max(max(v), 1.0), 10.0)) + "\t")
             if k in res["lda_res_th"]:
                 for i, vv in enumerate(v):
                     if vv == max(v):
@@ -409,7 +419,7 @@ def run_lefse(
         k_v = list(list(feats.items()))
 
         if lda_abs_th < 0.0:
-            lda_res, lda_res_th = dict(k_zero), dict(k_v)
+            lda_res, lda_res_th = dict(k_zero), dict()
         else:
             lda_res, lda_res_th = test_lda_r(
                 cls,

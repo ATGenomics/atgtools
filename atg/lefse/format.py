@@ -133,6 +133,7 @@ def get_class_slices(datasl):
     subcl_slices, cl_slices, class_hrchy, subcls = ([], [], [], [])
     last_cl = last_subcl = 0
 
+    i = None
     for i, d in enumerate(datasl):
         if prev_subclass != d[1]:
             subcl_slices.append((prev_subclass, (last_subcl, i)))
@@ -145,11 +146,10 @@ def get_class_slices(datasl):
             last_cl = i
         prev_subclass = d[1]
         prev_class = d[0]
-
-        subcl_slices.append([prev_subclass, (last_subcl, i + 1)])
-        subcls.append(prev_subclass)
-        cl_slices.append([prev_class, (last_cl, i + 1)])
-        class_hrchy.append((prev_class, subcls))
+    subcl_slices.append([prev_subclass, (last_subcl, i + 1)])
+    subcls.append(prev_subclass)
+    cl_slices.append([prev_class, (last_cl, i + 1)])
+    class_hrchy.append((prev_class, subcls))
     return dict(cl_slices), dict(subcl_slices), dict(class_hrchy)
 
 
