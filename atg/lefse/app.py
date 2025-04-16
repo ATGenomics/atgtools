@@ -3,6 +3,8 @@ import typer
 from atg.lefse.format import format_input
 from atg.lefse.lefse import run_lefse
 from atg.lefse.plot import plot_results
+from atg.lefse.format_simplified import format_input as format_input_simple
+from atg.lefse.plot_simplified import plot_results as plot_results_simple
 from atg.utils import (
     BackgroundColor,
     CorrectionLevel,
@@ -230,45 +232,45 @@ def plot_lefse_command(
     feature_font_size: int = typer.Option(
         7,
         "--feature-font-size",
-        "-f",
+        "-z",
         show_default=True,
         help="the font size for the features",
     ),
     output_format: OutputFormat = typer.Option(
         "png",
         "--format",
-        "-t",
+        "-f",
         show_default=True,
         help="the format for the output image",
     ),
-    dpi: int = typer.Option(300, "--dpi", show_default=True, help="the dpi for the output image"),
+    dpi: int = typer.Option(300, "--dpi", "-d", show_default=True, help="the dpi for the output image"),
     title: str = typer.Option("", "--title", "-t", show_default=False, help="the title for the plot"),
     title_font_size: int = typer.Option(
         12,
         "--title-font-size",
-        "-tf",
+        "-Z",
         show_default=True,
         help="the font size for the title",
     ),
     class_legend_font_size: int = typer.Option(
         10,
         "--class-legend-font-size",
-        "-cf",
+        "-c",
         show_default=True,
         help="the font size for the class legend",
     ),
     width: int = typer.Option(7, "--width", "-w", show_default=True, help="the width of the plot"),
-    left_space: float = typer.Option(0.2, "--left-space", "-ls", show_default=True, help="the left space of the plot"),
+    left_space: float = typer.Option(0.2, "--left-space", "-l", show_default=True, help="the left space of the plot"),
     right_space: float = typer.Option(
         0.1,
         "--right-space",
-        "-rs",
+        "-r",
         show_default=True,
         help="the right space of the plot",
     ),
     autoscale: bool = typer.Option(True, "--autoscale", "-a", show_default=True, help="autoscale the plot"),
     back_color: BackgroundColor = typer.Option(
-        "w", "--background-color", "-bc", show_default=True, help="the background color"
+        "w", "--background-color", "-b", show_default=True, help="the background color"
     ),
     n_scl: bool = typer.Option(
         False,
@@ -285,23 +287,199 @@ def plot_lefse_command(
         show_default=True,
         help="the maximum length of the feature name",
     ),
-    all_feats: str = typer.Option("", "--all-feats", "-af", show_default=False, help="show all features"),
+    all_feats: str = typer.Option("", "--all-feats", "-A", show_default=False, help="show all features"),
     otu_only: bool = typer.Option(
         False,
         "--otu-only",
-        "-o",
+        "-O",
         show_default=True,
         help="Plot only species resolved OTUs (as opposed to all levels)",
     ),
     report_features: bool = typer.Option(
         False,
         "--report-features",
-        "-rf",
+        "-R",
         show_default=False,
         help="report features to STDOUT",
     ),
 ):
     plot_results(
+        input_file,
+        output_file,
+        feature_font_size,
+        output_format,
+        dpi,
+        title,
+        title_font_size,
+        class_legend_font_size,
+        width,
+        left_space,
+        right_space,
+        autoscale,
+        back_color,
+        n_scl,
+        max_feature_len,
+        all_feats,
+        otu_only,
+        report_features,
+    )
+
+
+@lefse_app.command(name="format-simple")
+def format_lefse_simple_command(
+    input_file: str = typer.Option(
+        ...,
+        "--input",
+        "-i",
+        show_default=False,
+        help="the input file, feature hierarchical level "
+        "can be specified with | or . and those symbols "
+        "must not be present for other reasons in the "
+        "input file.",
+    ),
+    output_file: str = typer.Option(
+        ...,
+        "--output",
+        "-o",
+        show_default=False,
+        help="the output pickle file containing the data for LEfSe",
+    ),
+    feats_dir: FeaturesDir = typer.Option(
+        "r",
+        "--features",
+        "-f",
+        case_sensitive=False,
+        show_default=True,
+        help="set whether the features are on rows ('r') or on columns ('c')",
+    ),
+    pclass: int = typer.Option(
+        1,
+        "--class",
+        "-c",
+        show_default=True,
+        help="set which feature use as class (default 1)",
+    ),
+    psubclass: int = typer.Option(
+        None,
+        "--subclass",
+        "-s",
+        show_default=True,
+        help="set which feature use as subclass (default -1 meaning no subclass)",
+    ),
+    psubject: int = typer.Option(
+        None,
+        "--subject",
+        "-u",
+        show_default=True,
+        help="set which feature use as subject (default -1 meaning no subject)",
+    ),
+    norm_v: float = typer.Option(
+        -1.0,
+        "--norm",
+        "-n",
+        show_default=True,
+        help="set the normalization value (default -1.0 meaning no normalization)",
+    ),
+    json_format: bool = typer.Option(
+        False,
+        "--json",
+        "-j",
+        show_default=False,
+        help="the formatted table in json format",
+    ),
+):
+    """Format the input file for LEfSe using simplified approach."""
+    format_input_simple(
+        input_file,
+        output_file,
+        feats_dir,
+        pclass,
+        psubclass,
+        psubject,
+        norm_v,
+        json_format,
+    )
+
+
+@lefse_app.command(name="plot-simple")
+def plot_lefse_simple_command(
+    input_file: str = typer.Option(..., "--input", "-i", show_default=False, help="tab delimited input file"),
+    output_file: str = typer.Option(..., "--output", "-o", show_default=False, help="the file for the output image"),
+    feature_font_size: int = typer.Option(
+        7,
+        "--feature-font-size",
+        "-z",
+        show_default=True,
+        help="the font size for the features",
+    ),
+    output_format: OutputFormat = typer.Option(
+        "png",
+        "--format",
+        "-f",
+        show_default=True,
+        help="the format for the output image",
+    ),
+    dpi: int = typer.Option(300, "--dpi", "-d", show_default=True, help="the dpi for the output image"),
+    title: str = typer.Option("", "--title", "-t", show_default=False, help="the title for the plot"),
+    title_font_size: int = typer.Option(
+        12,
+        "--title-font-size",
+        "-Z",
+        show_default=True,
+        help="the font size for the title",
+    ),
+    class_legend_font_size: int = typer.Option(
+        10,
+        "--class-legend-font-size",
+        "-c",
+        show_default=True,
+        help="the font size for the class legend",
+    ),
+    width: int = typer.Option(7, "--width", "-w", show_default=True, help="the width of the plot"),
+    left_space: float = typer.Option(0.2, "--left-space", "-l", show_default=True, help="the left space of the plot"),
+    right_space: float = typer.Option(
+        0.1,
+        "--right-space",
+        "-r",
+        show_default=True,
+        help="the right space of the plot",
+    ),
+    autoscale: bool = typer.Option(True, "--autoscale", "-a", show_default=True, help="autoscale the plot"),
+    back_color: BackgroundColor = typer.Option(
+        "w", "--background-color", "-b", show_default=True, help="the background color"
+    ),
+    n_scl: bool = typer.Option(
+        False,
+        "--subclades",
+        "-s",
+        show_default=True,
+        help="number of label levels to be displayed",
+    ),
+    max_feature_len: int = typer.Option(
+        60,
+        "--max-feature-len",
+        "-m",
+        show_default=True,
+        help="the maximum length of the feature name",
+    ),
+    all_feats: str = typer.Option("", "--all-feats", "-A", show_default=False, help="show all features"),
+    otu_only: bool = typer.Option(
+        False,
+        "--otu-only",
+        "-O",
+        show_default=True,
+        help="Plot only species resolved OTUs",
+    ),
+    report_features: bool = typer.Option(
+        False,
+        "--report-features",
+        "-R",
+        show_default=False,
+        help="report features to STDOUT",
+    ),
+):
+    """Create LEfSe plot using simplified approach."""
+    plot_results_simple(
         input_file,
         output_file,
         feature_font_size,
