@@ -87,6 +87,15 @@ def plot_histo(
     tail = 0.5
     ht = head + tail
     ints = max(len(pos) * 0.2, 1.5)
+    
+    # Calculate required width for labels
+    if len(datahor["rows"]) > 0:
+        max_name_len = max(len(r[0]) for r in datahor["rows"])
+        required_ls = max(pls, 0.2 + (max_name_len * pfeature_font_size) / 1000)
+        margin_diff = required_ls - pls
+        prs = max(0.1, prs - margin_diff)
+        required_ls += 0.05
+    
     fig = plt.figure(
         figsize=(pwidth, ints + ht),
         edgecolor=pback_color,
@@ -94,6 +103,7 @@ def plot_histo(
     )
     ax = fig.add_subplot(111, frame_on=False, facecolor=pback_color)
     ls, rs = pls, 1.0 - prs
+    
     plt.subplots_adjust(
         left=ls,
         right=rs,
@@ -104,8 +114,8 @@ def plot_histo(
     # fig.canvas.manager.set_window_title("LDA results")
     fig.suptitle("LDA results")
 
-    l_align = {"horizontalalignment": "left", "verticalalignment": "baseline"}
-    r_align = {"horizontalalignment": "right", "verticalalignment": "baseline"}
+    l_align = {"horizontalalignment": "left", "verticalalignment": "center"}
+    r_align = {"horizontalalignment": "right", "verticalalignment": "center"}
     added = []
     if datahor["rows"][0][2] == cls[0]:
         m = 1
@@ -151,14 +161,11 @@ def plot_histo(
             rr = r[0]
         else:
             rr = ".".join(r[0].split(".")[-pn_scl:])
-        if len(rr) > pmax_feature_len:
-            param_max_feature_len_minus = rr[: pmax_feature_len / 2 - 2]
-            param_max_feature_len_plus = rr[-pmax_feature_len / 2 + 2 :]
-            rr = param_max_feature_len_minus + " [..]" + param_max_feature_len_plus
+        # Remove the truncation logic to show full names
         if m * (indcl * 2 - 1) < 0 and bcl:
             ax.text(
                 mv / 40.0,
-                float(i) - 0.3,
+                float(i),
                 rr,
                 l_align,
                 size=pfeature_font_size,
@@ -167,7 +174,7 @@ def plot_histo(
         else:
             ax.text(
                 -mv / 40.0,
-                float(i) - 0.3,
+                float(i),
                 rr,
                 r_align,
                 size=pfeature_font_size,
@@ -217,6 +224,8 @@ def plot_histo(
         facecolor=pback_color,
         edgecolor=pfore_color,
         dpi=pdpi,
+        bbox_inches='tight',
+        pad_inches=0.1, 
     )
     plt.close()
 
