@@ -8,8 +8,10 @@ import pandas as pd
 import requests
 from tabulate import tabulate
 from tqdm import tqdm
-from tqdm.contrib.concurrent import thread_map
 from urllib3 import util
+from loguru import logger
+
+from atg.utils import thread_map_parallel
 
 # ic.configureOutput(prefix=" -> ")
 
@@ -45,16 +47,16 @@ def download_url(input_file: Tuple[str, str, Path]) -> None:
                 shutil.copyfileobj(r_raw, file)
                 
     except requests.exceptions.Timeout:
-        print(f"Timeout downloading {fname}. Please retry later.")
+        logger.error(f"Timeout downloading {fname}. Please retry later.")
         raise
     except requests.exceptions.HTTPError as e:
-        print(f"HTTP error downloading {fname}: {e}")
+        logger.error(f"HTTP error downloading {fname}: {e}")
         raise
     except requests.exceptions.ConnectionError:
-        print(f"Connection error downloading {fname}. Please check your internet connection.")
+        logger.error(f"Connection error downloading {fname}. Please check your internet connection.")
         raise
     except Exception as e:
-        print(f"Error downloading {fname}: {e}")
+        logger.error(f"Error downloading {fname}: {e}")
         raise
 
 
@@ -102,10 +104,10 @@ def request_get(api: str, pdict: str, fields: str, safe: str = ",") -> pd.DataFr
 
         return df
     except requests.exceptions.Timeout:
-        print("Connection to the server has timed out. Please retry.")
+        logger.error("Connection to the server has timed out. Please retry.")
         return None
     except requests.exceptions.HTTPError:
-        print("HTTPError: This is likely caused by an invalid search query")
+        logger.error("HTTPError: This is likely caused by an invalid search query")
         return None
 
 
@@ -129,7 +131,7 @@ def ena_fields(id_err: str, save: bool = True, fields: str = "") -> Dict[str, st
 
     if save:
         df.to_csv(f"{id_err}.tsv", sep="\t", index=False)
-        print(f"ENA metadata saved as {id_err}.tsv")
+        logger.info(f"ENA metadata saved as {id_err}.tsv")
     else:
         pass
 
@@ -155,8 +157,7 @@ def md5_hash(filename, block_size=2**20):
 
 def thread_map_urls(url_dict: Dict[str, str], outdir: Path, cpu: int) -> None:
     iter_url = [(k, v, outdir) for k, v in url_dict.items()]
-    if len(iter_url) > 0:
-        thread_map(download_url, iter_url, max_workers=cpu)
+    thread_map_parallel(download_url, iter_url, cpu)
 
 
 def checksums(id_err: str, output_dir: Path, file_lst: List[str], threads: int) -> None:
@@ -179,7 +180,7 @@ def checksums(id_err: str, output_dir: Path, file_lst: List[str], threads: int) 
     md5_failed = [k for k, v in urls_dict.items() if v[0] != md5_hash(output_dir / k)]
 
     if compare_lists(dfmd5, md5_failed, output_dir, threads) is None:
-        print("All files are already downloaded")
+        logger.info("All files are already downloaded")
 
 
 def ena_search(
@@ -192,7 +193,7 @@ def ena_search(
     df = request_get("browser/api/tsv/textsearch", params, fields="all", safe=safe)
 
     if df.empty:
-        print("Check your query")
+        logger.error("Check your query")
 
     return df
 
@@ -207,14 +208,14 @@ def ena_retrieve(keywords: str, save: bool, only_ids: bool):
 
     if save and not only_ids:
         df.to_csv(f"{keywords}.tsv", sep="\t", index=False)
-        print(f"ENA metadata saved as {keywords}.tsv")
+        logger.info(f"ENA metadata saved as {keywords}.tsv")
     elif only_ids and not save:
-        print(tabulate(df[["accession"]], headers="keys", showindex=False))
+        logger.info(tabulate(df[["accession"]], headers="keys", showindex=False))
     elif only_ids and save:
         df["accession"].to_csv(f"{keywords}_ids.tsv", index=False, header=False)
-        print(f"ENA metadata saved as {keywords}_ids.tsv")
+        logger.info(f"ENA metadata saved as {keywords}_ids.tsv")
     else:
-        print(tabulate(df, headers="keys", showindex=False, tablefmt="plain"))
+        logger.info(tabulate(df, headers="keys", showindex=False, tablefmt="plain"))
 
 
 def ena_download(bioproject: str, cpus: int, fields: str = None, output_base_dir: Path = None) -> None:
@@ -230,7 +231,7 @@ def ena_download(bioproject: str, cpus: int, fields: str = None, output_base_dir
     files = [x.name for x in Path.glob(out_dir, "*.fastq.gz")]
 
     if len(files) > 0:
-        print("Verifying MD5 File Checksums...")
+        logger.info("Verifying MD5 File Checksums...")
         checksums(err_id, out_dir, files, cpus)
     else:
         err_urls = ena_urls(ena_fields(id_err=err_id, fields=fields))

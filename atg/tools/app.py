@@ -1,11 +1,12 @@
 from pathlib import Path
 
 import typer
-from psutil import cpu_count
+from multiprocessing import cpu_count
 
 from atg.tools.ena import ena_download, ena_fields, ena_retrieve
 from atg.tools.git import gitcheck
 from atg.tools.manifest import create_manifest
+from atg.tools.sample import subsample_fastq_seqkit
 from atg.utils import OrderCommands, count_fastq, get_abundance, one_liner
 
 tools_app = typer.Typer(
@@ -190,3 +191,55 @@ def count_tools_command(
 def abundance_tools_command():
     """Relative abundance tables"""
     print(get_abundance())
+
+
+@tools_app.command(name="subsample")
+def subsample_seqkit_tools_command(
+    input_path: str = typer.Option(
+        ...,
+        "--input",
+        "-i",
+        show_default=False,
+        help="FASTQ file or directory containing FASTQ files (supports both single-end and paired-end)",
+    ),
+    output_dir: str = typer.Option(
+        ...,
+        "--output",
+        "-o",
+        show_default=False,
+        help="Output directory for subsampled files",
+    ),
+    proportion: float = typer.Option(
+        0.1,
+        "--proportion",
+        "-p",
+        min=0.0,
+        max=1.0,
+        help="Proportion of reads to subsample (0.0 to 1.0)",
+    ),
+    seed: int = typer.Option(
+        42,
+        "--seed",
+        "-s",
+        help="Random seed for reproducible subsampling",
+    ),
+    max_workers: int = typer.Option(
+        cpu_count(),
+        "--workers",
+        "-w",
+        help="Maximum number of worker threads for parallel processing",
+    ),
+):
+    """Create subsamples of FASTQ files with specified proportion using seqkit.
+    
+    Supports both single-end (NAME.fastq.gz, NAME.fastq) and paired-end 
+    (NAME_R1.fastq.gz/NAME_R2.fastq.gz, NAME_1.fastq.gz/NAME_2.fastq.gz) files.
+    Requires seqkit to be installed.
+    """
+    subsample_fastq_seqkit(
+        input_path=input_path,
+        output_dir=output_dir,
+        proportion=proportion,
+        seed=seed,
+        max_workers=max_workers,
+    )
