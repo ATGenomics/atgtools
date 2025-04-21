@@ -39,7 +39,7 @@ def app_version():
 main_app.add_typer(typer_instance=tools_app, name="tools")
 
 # Parser
-main_app.add_typer(typer_instance=parser_app, name="parser")
+# main_app.add_typer(typer_instance=parser_app, name="parser")
 
 # Diversity
 main_app.add_typer(typer_instance=div_app, name="div")
@@ -48,7 +48,7 @@ main_app.add_typer(typer_instance=div_app, name="div")
 main_app.add_typer(typer_instance=lefse_app, name="lefse")
 
 # Plots
-main_app.add_typer(typer_instance=plot_app, name="plot")
+# main_app.add_typer(typer_instance=plot_app, name="plot")
 
 # Stats
 # # main_app.add_typer(typer_instance=stats_app, name="stats")
