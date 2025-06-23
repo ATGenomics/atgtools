@@ -77,7 +77,9 @@ def test_rep_wilcoxon_r(
     tot_ok = 0
     alpha_mtc = th
     all_diff = []
-    for pair in [(x, y) for x in list(cl_hie.keys()) for y in list(cl_hie.keys()) if x < y]:
+    for pair in [
+        (x, y) for x in list(cl_hie.keys()) for y in list(cl_hie.keys()) if x < y
+    ]:
         dir_cmp = "not_set"
         l_subcl1, l_subcl2 = [len(cl_hie[pair[0]]), len(cl_hie[pair[1]])]
         if mul_cor != 0:
@@ -111,7 +113,9 @@ def test_rep_wilcoxon_r(
                     cl_li = ["a" for _ in cl1] + ["b" for _ in cl2]
                     vec_cl = robjects.FactorVector(robjects.StrVector(cl_li))
                     robjects.globalenv["y"] = vec_cl
-                    pvw = robjects.r("pvalue(wilcox_test(x~y, data=data.frame(x, y)))")[0]
+                    pvw = robjects.r("pvalue(wilcox_test(x~y, data=data.frame(x, y)))")[
+                        0
+                    ]
                     tresw = pvw < alpha_mtc * 2.0
                 if first:
                     first = False
@@ -204,12 +208,14 @@ def test_lda_r(clslda, featslda, cl_sl, boots, fract_sample, lda_th, tol_min, nl
 
         for c in clss:
             max_class = max(float(featslda["class"].count(c)) * 0.5, 4)
-            if len({[float(v[1]) for v in ff if v[0] == c]}) > max_class:
+            if len(set([float(v[1]) for v in ff if v[0] == c])) > max_class:
                 continue
 
             for i, v in enumerate(featslda[k]):
                 if featslda["class"][i] == c:
-                    nor_var = random.normalvariate(0.0, max(featslda[k][i] * 0.05, 0.01))
+                    nor_var = random.normalvariate(
+                        0.0, max(featslda[k][i] * 0.05, 0.01)
+                    )
                     featslda[k][i] = math.fabs(featslda[k][i] + nor_var)
 
     rdict = {}
@@ -236,7 +242,7 @@ def test_lda_r(clslda, featslda, cl_sl, boots, fract_sample, lda_th, tol_min, nl
         for b in set(clslda["class"]):
             if a > b:
                 pairs.append((a, b))
-    k = None
+
     for k in fk:
         for i in range(boots):
             means[k].append([])
@@ -250,29 +256,41 @@ def test_lda_r(clslda, featslda, cl_sl, boots, fract_sample, lda_th, tol_min, nl
                 break
 
         rand_s = [r + 1 for r in rand_s]
-        means[k][i] = []
+        means[fk[0]][i] = []  # Initialize for first feature
 
         for p in pairs:
             robjects.globalenv["rand_s"] = robjects.IntVector(rand_s)
             robjects.globalenv["sub_d"] = robjects.r("d[rand_s,]")
-            robjects.r(f"z <- suppressWarnings(lda(as.formula({f}), data=sub_d, tol={str(tol_min)}))")
-            robjects.r("w <- z$scaling[, 1]")
-            robjects.r("w.unit <- w / sqrt(sum(w ^ 2))")
-            robjects.r("ss <- sub_d[, -match('class', colnames(sub_d))]")
+            z = robjects.r(
+                "z <- suppressWarnings(lda(as.formula("
+                + f
+                + "),data=sub_d, tol="
+                + str(tol_min)
+                + "))"
+            )
+            robjects.r("w <- z$scaling[,1]")
+            robjects.r("w.unit <- w/sqrt(sum(w^2))")
+            robjects.r('ss <- sub_d[,-match("class", colnames(sub_d))]')
 
             if "subclass" in featslda:
-                robjects.r("ss <- ss[, -match('subclass', colnames(ss))]")
+                robjects.r('ss <- ss[,-match("subclass", colnames(ss))]')
 
             if "subject" in featslda:
-                robjects.r("ss <- ss[, -match('subject', colnames(ss))]")
+                robjects.r('ss <- ss[,-match("subject", colnames(ss))]')
 
             robjects.r("xy.matrix <- as.matrix(ss)")
-            robjects.r("LD <- xy.matrix %*% w.unit")
+            robjects.r("LD <- xy.matrix%*%w.unit")
             robjects.r(
-                f"effect.size <- abs(mean(LD[sub_d[, 'class'] == '{p[0]}']) - mean(LD[sub_d[, 'class'] == '{p[1]}'']))"
+                'effect.size <- abs(mean(LD[sub_d[,"class"]=="'
+                + p[0]
+                + '"]) - mean(LD[sub_d[,"class"] =="'
+                + p[1]
+                + '"]))'
             )
-            scal = robjects.r("wfinal <- w.unit * effect.size")
-            rres = robjects.r("mm <- z$means")
+            robjects.r("wfinal <- w.unit * effect.size")
+            scal = robjects.r("wfinal")
+            robjects.r("mm <- z$means")
+            rres = robjects.r("mm")
             rowns = list(rres.rownames)
             lenc = len(list(rres.colnames))
             coeff = []
@@ -285,7 +303,9 @@ def test_lda_r(clslda, featslda, cl_sl, boots, fract_sample, lda_th, tol_min, nl
             for pp in [p[0], p[1]]:
                 pp_v = (
                     pp,
-                    [float(ff) for ff in rres.rx(pp, True)] if pp in rowns else [0.0] * lenc,
+                    [float(ff) for ff in rres.rx(pp, True)]
+                    if pp in rowns
+                    else [0.0] * lenc,
                 )
                 res_list.append(pp_v)
             res = dict(res_list)
@@ -307,7 +327,7 @@ def test_lda_r(clslda, featslda, cl_sl, boots, fract_sample, lda_th, tol_min, nl
 def save_res(res, filename):
     with open(filename, "w", encoding="utf-8") as out:
         for k, v in list(res["cls_means"].items()):
-            out.write(k + "\t" + str(math.log(max(v, 1.0), 10.0)) + "\t")
+            out.write(k + "\t" + str(math.log(max(max(v), 1.0), 10.0)) + "\t")
             if k in res["lda_res_th"]:
                 for i, vv in enumerate(v):
                     if vv == max(v):
@@ -391,12 +411,15 @@ def run_lefse(
             print("wilc ok\t")
 
     if len(feats) > 0:
-        print(f"Number of significantly discriminative features: " f"{len(feats)} ({kw_n_ok}) before internal wilcoxon")
+        print(
+            f"Number of significantly discriminative features: "
+            f"{len(feats)} ({kw_n_ok}) before internal wilcoxon"
+        )
         k_zero = [(k, 0.0) for k, v in list(feats.items())]
         k_v = list(list(feats.items()))
 
         if lda_abs_th < 0.0:
-            lda_res, lda_res_th = dict(k_zero), dict(k_v)
+            lda_res, lda_res_th = dict(k_zero), dict()
         else:
             lda_res, lda_res_th = test_lda_r(
                 cls,
@@ -409,7 +432,10 @@ def run_lefse(
                 nlogs,
             )
     else:
-        print(f"Number of significantly discriminative features: " f"{len(feats)} ({kw_n_ok}) before internal wilcoxon")
+        print(
+            f"Number of significantly discriminative features: "
+            f"{len(feats)} ({kw_n_ok}) before internal wilcoxon"
+        )
         print("No features with significant differences between the two classes")
         lda_res, lda_res_th = {}, {}
 
@@ -420,5 +446,8 @@ def run_lefse(
         "cls_means_kord": kord,
         "wilcox_res": wilcoxon_res,
     }
-    print(f"Number of discriminative features with abs LDA score > " f"{lda_abs_th}: {len(lda_res_th)}")
+    print(
+        f"Number of discriminative features with abs LDA score > "
+        f"{lda_abs_th}: {len(lda_res_th)}"
+    )
     save_res(outres, output_file)

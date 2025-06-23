@@ -1,63 +1,25 @@
-[tool.poetry]
+[project]
 name = "atgtools"
-version = "0.1.8"
-description = ""
-authors = ["Otoniel Maya <otto94@gmail.com>"]
-license = "MIT"
-packages = [{include = "atg", from = "."}]
-
-[tool.poetry.dependencies]
-python = ">=3.9,<=3.12"
-pandas = "^2.0.2"
-requests = "^2.31.0"
-psutil = "^5.9.5"
-tqdm = "^4.66.1"
-tabulate = "^0.9.0"
-rpy2 = "^3.5.14"
-loguru = "^0.7.2"
-matplotlib = "^3.8.0"
-types-psutil = "^5.9.5.16"
-pandas-stubs = "^2.0.3.230814"
-types-requests = "^2.31.0.5"
-types-tqdm = "^4.66.0.2"
-anndata = "^0.10.4"
-pyfastx = "^2.0.2"
-typer = "^0.12.3"
-
-[tool.poetry.scripts]
-atg = 'atg:atg'
-
-[build-system]
-requires = ["poetry-core"]
-build-backend = "poetry.core.masonry.api"
-
-# [tool.poetry.group.test.dependencies]
-pytest = "^7.4"
-pytest-sugar = "*"
-pytest-cov = "*"
-black = "*"
-mypy = "*"
-ruff = "*"
-isort = "*"
-
-[tool.black]
-line-length = 120
-exclude = '''
-/(
-    \.git
-  | \.mypy_cache
-  | \.tox
-  | venv
-  | \.venv
-  | _build
-  | buck-out
-  | build
-  | dist
-)/
-'''
-
-[tool.isort]
-# make it compatible with black
-profile = "black"
-
-[tool.tox]
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.12, <=3.13"
+dependencies = [
+    "adjusttext>=1.3.0",
+    "anndata>=0.11.4",
+    "bionumpy>=1.0.14",
+    "loguru>=0.7.3",
+    "matplotlib>=3.10.1",
+    "matplotlib-venn>=1.1.2",
+    "pandas>=2.2.3",
+    "psutil>=7.0.0",
+    "pyfastx>=2.2.0",
+    "pytest>=8.3.5",
+    "pytest-cov>=6.1.1",
+    "requests>=2.32.3",
+    "rpy2>=3.5.17",
+    "seaborn>=0.13.2",
+    "tabulate>=0.9.0",
+    "tqdm>=4.67.1",
+    "typer>=0.15.3",
+]

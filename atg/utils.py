@@ -1,16 +1,17 @@
 import re
 import shutil
-import sys
 import time
 from enum import Enum
 from functools import wraps
 from pathlib import Path
-from typing import Any
+from typing import Any, Union, Dict, Callable, List
 
 import anndata as ad
 import pyfastx
 from click import Context
+from loguru import logger
 from typer.core import TyperGroup
+from tqdm.contrib.concurrent import thread_map
 
 
 def timeit(f: Any) -> Any:
@@ -24,10 +25,22 @@ def timeit(f: Any) -> Any:
         result = f(*args, **kargs)
         end = time.time()
         res = round((end - start), 4)
-        print(f"Elapsed time {f.__name__}: {res} secs", end="\n")
+        logger.info(f"Elapsed time {f.__name__}: {res} secs")
         return result
 
     return wrapper
+
+
+def thread_map_parallel(func: Callable, data: List, max_workers: int) -> None:
+    """Execute function in parallel using thread_map.
+    
+    Args:
+        func: Function to execute
+        data: List of data items to process
+        max_workers: Maximum number of worker threads
+    """
+    if len(data) > 0:
+        thread_map(func, data, max_workers=max_workers, desc="Processing")
 
 
 def one_liner(input_fasta: str) -> None:
@@ -53,29 +66,29 @@ def one_liner(input_fasta: str) -> None:
 
 
 class FeaturesDir(str, Enum):
-    rows = "r"
-    cols = "c"
+    ROWS = "r"
+    COLS = "c"
 
 
 class CorrectionLevel(str, Enum):
-    no_correction = 0
-    independent_comp = 1
-    dependent_comp = 2
+    NO_CORRECTION = 0
+    INDEPENDENT_COMP = 1
+    DEPENDENT_COMP = 2
 
 
 class OutputFormat(str, Enum):
-    png = "png"
-    svg = "svg"
-    pdf = "pdf"
+    PNG = "png"
+    SVG = "svg"
+    PDF = "pdf"
 
 
 class BackgroundColor(str, Enum):
-    white = "w"
-    black = "k"
+    WHITE = "w"
+    BLACK = "k"
 
 
 class OrderCommands(TyperGroup):
-    def list_commands(self, ctx: Context):
+    def list_commands(self, _ctx: Context):
         """Return list of commands in the order appear."""
         return list(self.commands)
 
@@ -87,21 +100,39 @@ def get_abundance():
     return se.to_df().T.reset_index()
 
 
-def check_dir(fastq_dir: str):
+def check_dir(fastq_dir: str) -> Path:
+    """
+    Check if a directory exists and is not empty.
+
+    Args:
+        fastq_dir: Path to the directory to check
+
+    Returns:
+        Path: Resolved path to the directory
+    """
     _fastq_dir = Path(fastq_dir).resolve()
     if not any(Path(_fastq_dir).iterdir()):
-        print(f"{_fastq_dir.stem}/ is empty")
-        sys.exit(1)
+        raise FileNotFoundError(f"{_fastq_dir.stem}/ is empty")
     return _fastq_dir
 
 
-def fastq_files(fastq: str, pattern: str) -> list:
+def fastq_files(fastq: str, pattern: str) -> dict:
+    """
+    Get FASTQ files from directory or single file.
+    
+    Args:
+        fastq: Path to FASTQ file or directory
+        pattern: Regex pattern to match files
+        
+    Returns:
+        dict: Dictionary mapping sample names to file paths
+    """
     if Path(fastq).is_file():
         fqfile = Path(fastq).name.partition(".")[0]
         return {fqfile: fastq}
 
     check_dir(fastq)
-    pattern = re.compile(r".*_([1-2]|R[1-2]).(fastq|fq)\.gz$")
+    pattern = re.compile(pattern)
     fqfiles = sorted([x for x in Path(fastq).glob("*") if pattern.match(str(x))])
     snames = sorted([str(x.name.partition(".")[0]) for x in fqfiles])
 
@@ -111,7 +142,59 @@ def fastq_files(fastq: str, pattern: str) -> list:
 def count_fastq(fastq_file, pattern: str):
     _fastq_files = fastq_files(fastq=fastq_file, pattern=pattern)
     for k, v in _fastq_files.items():
-        print(k, len(pyfastx.Fastq(str(v), build_index=True)))
+        print(k, len(pyfastx.Fastx(str(v), build_index=True)))
         index_file = Path(f"{str(v)}.fxi")
         if index_file.exists():
             index_file.unlink()
+
+
+def check_paired(fastq_files: dict) -> dict:
+    """
+    Check if FASTQ files are paired-end based on naming patterns.
+    
+    Args:
+        fastq_files: Dictionary of FASTQ files from fastq_files function
+        
+    Returns:
+        dict: Dictionary with 'paired' and 'single' keys containing file lists
+    """
+    paired_files = {}
+    single_files = {}
+    
+    # Common paired-end patterns (both compressed and uncompressed)
+    paired_patterns = [
+        (r'_R1\.(fastq|fq)(\.gz)?$', r'_R2\.(fastq|fq)(\.gz)?$'),
+        (r'_1\.(fastq|fq)(\.gz)?$', r'_2\.(fastq|fq)(\.gz)?$'),
+        (r'\.1\.(fastq|fq)(\.gz)?$', r'\.2\.(fastq|fq)(\.gz)?$'),
+    ]
+    
+    for sample_name, file_path in fastq_files.items():
+        file_str = str(file_path)
+        is_paired = False
+        
+        for pattern1, pattern2 in paired_patterns:
+            if re.search(pattern1, file_str):
+                # Find corresponding R2/2 file
+                potential_pair = re.sub(pattern1, pattern2, file_str)
+                if Path(potential_pair).exists():
+                    paired_files[sample_name] = {
+                        'R1': file_path,
+                        'R2': Path(potential_pair)
+                    }
+                    is_paired = True
+                    break
+            elif re.search(pattern2, file_str):
+                # Find corresponding R1/1 file
+                potential_pair = re.sub(pattern2, pattern1, file_str)
+                if Path(potential_pair).exists():
+                    paired_files[sample_name] = {
+                        'R1': Path(potential_pair),
+                        'R2': file_path
+                    }
+                    is_paired = True
+                    break
+        
+        if not is_paired:
+            single_files[sample_name] = file_path
+    
+    return {'paired': paired_files, 'single': single_files}

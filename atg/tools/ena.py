@@ -8,20 +8,56 @@ import pandas as pd
 import requests
 from tabulate import tabulate
 from tqdm import tqdm
-from tqdm.contrib.concurrent import thread_map
 from urllib3 import util
+from loguru import logger
+
+from atg.utils import thread_map_parallel
 
 # ic.configureOutput(prefix=" -> ")
 
 
 def download_url(input_file: Tuple[str, str, Path]) -> None:
+    """Downloads a file from a URL with retry logic and progress bar.
+    
+    Parameters
+    ----------
+    input_file : Tuple[str, str, Path]
+        Tuple containing (filename, url, output_directory)
+    """
     fname, url, output_dir = input_file[0], input_file[1], input_file[2]
-    r = requests.get(url, stream=True, allow_redirects=True, timeout=20)
-    file_size = int(r.headers.get("Content-Length", 0))
-
-    with tqdm.wrapattr(r.raw, "read", total=file_size, desc=fname) as r_raw:
-        with open(output_dir / fname, "wb") as file:
-            shutil.copyfileobj(r_raw, file)
+    
+    session = requests.Session()
+    retry = util.Retry(
+        total=5,
+        backoff_factor=1,
+        status_forcelist=[500, 502, 503, 504, 429],
+        allowed_methods=["GET"]
+    )
+    adapter = requests.adapters.HTTPAdapter(max_retries=retry)
+    session.mount("https://", adapter)
+    
+    try:
+        r = session.get(url, stream=True, allow_redirects=True, timeout=30)
+        r.raise_for_status()
+        
+        file_size = int(r.headers.get("Content-Length", 0))
+        
+        with tqdm.wrapattr(r.raw, "read", total=file_size, desc=fname) as r_raw:
+            with open(output_dir / fname, "wb") as file:
+                shutil.copyfileobj(r_raw, file)
+                
+    except requests.exceptions.Timeout:
+        logger.error(f"Timeout downloading {fname}. Please retry later.")
+        raise
+    except requests.exceptions.HTTPError as e:
+        logger.error(f"HTTP error downloading {fname}: {e}")
+        raise
+    except requests.exceptions.ConnectionError:
+        logger.error(f"Connection error downloading {fname}. Please check your internet connection.")
+        raise
+    except Exception as e:
+        logger.error(f"Error downloading {fname}: {e}")
+        raise
 
 
 def fix_urls(urls: list) -> Dict[str, str]:
@@ -68,15 +104,15 @@ def request_get(api: str, pdict: str, fields: str, safe: str = ",") -> pd.DataFr
 
         return df
     except requests.exceptions.Timeout:
-        print("Connection to the server has timed out. Please retry.")
+        logger.error("Connection to the server has timed out. Please retry.")
         return None
     except requests.exceptions.HTTPError:
-        print("HTTPError: This is likely caused by an invalid search query")
+        logger.error("HTTPError: This is likely caused by an invalid search query")
         return None
 
 
 def ena_fields(id_err: str, save: bool = True, fields: str = "") -> Dict[str, str]:
-    if fields is None:
+    if not fields:
         fields = (
             "study_accession,sample_accession,"
             "experiment_accession,run_accession,"
@@ -95,7 +131,7 @@ def ena_fields(id_err: str, save: bool = True, fields: str = "") -> Dict[str, st
 
     if save:
         df.to_csv(f"{id_err}.tsv", sep="\t", index=False)
-        print(f"ENA metadata saved as {id_err}.tsv")
+        logger.info(f"ENA metadata saved as {id_err}.tsv")
     else:
         pass
 
@@ -121,8 +157,7 @@ def md5_hash(filename, block_size=2**20):
 
 def thread_map_urls(url_dict: Dict[str, str], outdir: Path, cpu: int) -> None:
     iter_url = [(k, v, outdir) for k, v in url_dict.items()]
-    if len(iter_url) > 0:
-        thread_map(download_url, iter_url, max_workers=cpu)
+    thread_map_parallel(download_url, iter_url, cpu)
 
 
 def checksums(id_err: str, output_dir: Path, file_lst: List[str], threads: int) -> None:
@@ -145,7 +180,7 @@ def checksums(id_err: str, output_dir: Path, file_lst: List[str], threads: int) 
     md5_failed = [k for k, v in urls_dict.items() if v[0] != md5_hash(output_dir / k)]
 
     if compare_lists(dfmd5, md5_failed, output_dir, threads) is None:
-        print("All files are already downloaded")
+        logger.info("All files are already downloaded")
 
 
 def ena_search(
@@ -158,7 +193,7 @@ def ena_search(
     df = request_get("browser/api/tsv/textsearch", params, fields="all", safe=safe)
 
     if df.empty:
-        print("Check your query")
+        logger.error("Check your query")
 
     return df
 
@@ -173,29 +208,30 @@ def ena_retrieve(keywords: str, save: bool, only_ids: bool):
 
     if save and not only_ids:
         df.to_csv(f"{keywords}.tsv", sep="\t", index=False)
-        print(f"ENA metadata saved as {keywords}.tsv")
+        logger.info(f"ENA metadata saved as {keywords}.tsv")
     elif only_ids and not save:
-        print(tabulate(df[["accession"]], headers="keys", showindex=False))
+        logger.info(tabulate(df[["accession"]], headers="keys", showindex=False))
     elif only_ids and save:
         df["accession"].to_csv(f"{keywords}_ids.tsv", index=False, header=False)
-        print(f"ENA metadata saved as {keywords}_ids.tsv")
+        logger.info(f"ENA metadata saved as {keywords}_ids.tsv")
     else:
-        print(tabulate(df, headers="keys", showindex=False, tablefmt="plain"))
+        logger.info(tabulate(df, headers="keys", showindex=False, tablefmt="plain"))
 
 
-def ena_download(bioproject: str, cpus: int, fields: str = None) -> None:
+def ena_download(bioproject: str, cpus: int, fields: str = None, output_base_dir: Path = None) -> None:
     """
     Download FASTQ files from ENA given accession number.
     """
     err_id = bioproject
     threads = cpus
-    out_dir = Path.cwd() / err_id
+    base_path = output_base_dir if output_base_dir else Path.cwd()
+    out_dir = base_path / err_id
     out_dir.mkdir(parents=True, exist_ok=True)
 
     files = [x.name for x in Path.glob(out_dir, "*.fastq.gz")]
 
     if len(files) > 0:
-        print("Verifying MD5 File Checksums...")
+        logger.info("Verifying MD5 File Checksums...")
         checksums(err_id, out_dir, files, cpus)
     else:
         err_urls = ena_urls(ena_fields(id_err=err_id, fields=fields))
